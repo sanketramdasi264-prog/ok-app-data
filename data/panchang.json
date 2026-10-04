@@ -15,31 +15,10 @@
     "karan": "बव",
     "karan_end": "०८:२५",
     "karan_next": "बालव",
-    "sunrise": {
-      "StdTime": "06:28 03/10/2026 +05:30",
-      "Location": {
-        "Name": "Pune, Maharashtra, India",
-        "Longitude": 73.855,
-        "Latitude": 18.521
-      }
-    },
-    "sunset": {
-      "StdTime": "18:18 03/10/2026 +05:30",
-      "Location": {
-        "Name": "Pune, Maharashtra, India",
-        "Longitude": 73.855,
-        "Latitude": 18.521
-      }
-    },
-    "moonrise": "",
-    "moonset": {
-      "StdTime": "12:52 03/10/2026 +05:30",
-      "Location": {
-        "Name": "Pune, Maharashtra, India",
-        "Longitude": 73.855,
-        "Latitude": 18.521
-      }
-    },
+    "sunrise": "06:28",
+    "sunset": "18:18",
+    "moonrise": "00:11",
+    "moonset": "",
     "rahukaal": {
       "Start": {
         "StdTime": "09:26 03/10/2026 +05:30",
