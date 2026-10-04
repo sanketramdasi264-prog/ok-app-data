@@ -18,26 +18,8 @@
     "sunrise": "06:28",
     "sunset": "18:18",
     "moonrise": "00:11",
-    "moonset": "",
-    "rahukaal": {
-      "Start": {
-        "StdTime": "09:26 03/10/2026 +05:30",
-        "Location": {
-          "Name": "Pune, Maharashtra, India",
-          "Longitude": 73.855,
-          "Latitude": 18.521
-        }
-      },
-      "End": {
-        "StdTime": "10:54 03/10/2026 +05:30",
-        "Location": {
-          "Name": "Pune, Maharashtra, India",
-          "Longitude": 73.855,
-          "Latitude": 18.521
-        }
-      },
-      "DaysBetween": 0.06155381944444444
-    },
+    "moonset": "12:52",
+    "rahukaal": "09:26 ते 10:54",
     "moon_rashi": "",
     "sun_rashi": "",
     "guru_rashi": "मिथुन",
