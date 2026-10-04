@@ -3,7 +3,7 @@ const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 
-// १. मराठी डिक्शनरी (Mapping)
+// १. अपडेटेड मराठी डिक्शनरी (API च्या शब्दांनुसार)
 const marathiMapping = {
     tithi: {
         "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
@@ -12,21 +12,21 @@ const marathiMapping = {
         "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी", "Purnima": "पौर्णिमा", "Amavasya": "अमावस्या"
     },
     paksha: {
-        "Shukla": "शुक्ल", "Krishna": "कृष्ण", "Bright": "शुक्ल", "Dark": "कृष्ण"
+        "Shukla": "शुक्ल", "Krishna": "कृष्ण", "Bright": "शुक्ल", "Dark": "कृष्ण", "WhiteHalf": "शुक्ल", "DarkHalf": "कृष्ण"
     },
     nakshatra: {
         "Ashvini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका", "Rohini": "रोहिणी",
-        "Mrigashirsha": "मृगशीर्ष", "Ardra": "आर्द्रा", "Punarvasu": "पुनर्वसू", "Pushya": "पुष्य",
+        "Mrigashirsha": "मृगशीर्ष", "Ardra": "आर्द्रा", "Aridra": "आर्द्रा", "Punarvasu": "पुनर्वसू", "Pushya": "पुष्य",
         "Ashlesha": "आश्लेषा", "Magha": "मघा", "Purva Phalguni": "पूर्वा फाल्गुनी", "Uttara Phalguni": "उत्तरा फाल्गुनी",
         "Hasta": "हस्त", "Chitra": "चित्रा", "Svati": "स्वाती", "Vishakha": "विशाखा",
         "Anuradha": "अनुराधा", "Jyeshtha": "ज्येष्ठा", "Mula": "मूळ", "Purva Ashadha": "पूर्वाषाढा",
-        "Uttara Ashadha": "उत्तराषाढा", "Shravana": "श्रवण", "Dhanishta": "धनिष्ठा", "Shatabhisha": "शततारका",
-        "Purva Bhadrapada": "पूर्वा भाद्रपदा", "Uttara Bhadrapada": "उत्तरा भाद्रपदा", "Revati": "रेवती", "Uttarasadha": "उत्तराषाढा"
+        "Uttara Ashadha": "उत्तराषाढा", "Uttarasadha": "उत्तराषाढा", "Shravana": "श्रवण", "Dhanishta": "धनिष्ठा", "Shatabhisha": "शततारका",
+        "Purva Bhadrapada": "पूर्वा भाद्रपदा", "Uttara Bhadrapada": "उत्तरा भाद्रपदा", "Revati": "रेवती"
     },
     yog: {
         "Sukarma": "सुकर्मा", "Dhriti": "धृती", "Shula": "शूल", "Ganda": "गंड", "Vriddhi": "वृद्धी", "Dhruva": "ध्रुव",
         "Vyaghata": "व्याघात", "Harshana": "हर्षण", "Vajra": "वज्र", "Siddhi": "सिद्धी", "Vyatipata": "व्यतीपात",
-        "Variyana": "वरीयान", "Parigha": "परिघ", "Shiva": "शिव", "Siddha": "सिद्ध", "Sadhya": "साध्य", "Shubha": "शुभ",
+        "Variyana": "वरीयान", "Variyan": "वरीयान", "Parigha": "परिघ", "Shiva": "शिव", "Siddha": "सिद्ध", "Sadhya": "साध्य", "Shubha": "शुभ",
         "Shukla": "शुक्ल", "Brahma": "ब्रह्म", "Indra": "इंद्र", "Vaidhriti": "वैधृती", "Vishkambha": "विष्कंभ",
         "Priti": "प्रीती", "Ayushmana": "आयुष्मान", "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगंड"
     },
@@ -50,7 +50,20 @@ function translate(category, englishWord) {
     return marathiMapping[category][englishWord] || englishWord;
 }
 
-// सुरक्षितपणे API कॉल करण्यासाठी हेल्पर फंक्शन
+// नवीन हेल्पर फंक्शन: API च्या Object मधून अचूक नाव काढण्यासाठी
+function extractName(data) {
+    if (!data) return "";
+    let nameStr = "";
+    // जर डेटा Object असेल (उदा. {"Name": "Saptami"})
+    if (typeof data === 'object' && data.Name) {
+        nameStr = data.Name;
+    } else if (typeof data === 'string') {
+        nameStr = data;
+    }
+    // जर नावात "Aridra - 1" असे आकडे असतील, तर ते काढून टाकण्यासाठी
+    return nameStr.split(' - ')[0].trim();
+}
+
 async function fetchApiData(url) {
     try {
         const response = await fetch(url);
@@ -63,7 +76,6 @@ async function fetchApiData(url) {
     }
 }
 
-// २. VedAstro कडून लाईव्ह डेटा आणणारे मुख्य फंक्शन
 async function fetchVedAstroData(dateObj) {
     const dd = String(dateObj.getDate()).padStart(2, '0');
     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -75,7 +87,6 @@ async function fetchVedAstroData(dateObj) {
     const baseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Pune/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
 
-    // सर्व Endpoints वरून एकाच वेळी डेटा आणणे (Parallel Fetch)
     const [
         panchangaTable,
         rahuKala,
@@ -92,22 +103,20 @@ async function fetchVedAstroData(dateObj) {
         fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Sun/${locTimeStr}/divisionalChart/D1`)
     ]);
 
-    // पंचांग टेबल मधील माहिती काढणे
     const pt = panchangaTable?.PanchangaTable || {};
-    
-    // राशीचे नाव काढण्यासाठी सुरक्षित पद्धत (API response नुसार)
     const getZodiacName = (rashiData) => rashiData?.PlanetZodiacSignInDivisionalChart?.ZodiacSign?.Name || (typeof rashiData === 'string' ? rashiData : "");
 
     const fetchedData = {
         "date": formattedDate,
-        "weekday": translate("weekdays", pt.DayOfWeek),
+        "weekday": translate("weekdays", pt.DayOfWeek || dateObj.toLocaleDateString('en-US', { weekday: 'long' })),
         
-        "tithi": translate("tithi", pt.Tithi), 
-        "paksha": "", // VedAstro च्या मुख्य टेबलमध्ये पक्षात येत नसल्यास मॅन्युअली काढता येतो किंवा तसाच ठेवता येतो
+        "tithi": translate("tithi", extractName(pt.Tithi)), 
+        // पक्ष API मध्ये tithi.Paksha किंवा Phase मध्ये येत आहे 
+        "paksha": translate("paksha", pt.Tithi?.Paksha || pt.Tithi?.Phase || ""),
         
-        "nakshatra": translate("nakshatra", pt.Nakshatra),
-        "yog": translate("yog", pt.Yoga),
-        "karan": translate("karan", pt.Karana),
+        "nakshatra": translate("nakshatra", extractName(pt.Nakshatra)),
+        "yog": translate("yog", extractName(pt.Yoga)),
+        "karan": translate("karan", extractName(pt.Karana)),
         
         "moon_rashi": translate("rashi", getZodiacName(moonRashi)),
         "sun_rashi": translate("rashi", getZodiacName(sunRashi)),
@@ -120,7 +129,7 @@ async function fetchVedAstroData(dateObj) {
         
         "rahukaal": typeof rahuKala === 'string' ? rahuKala : (rahuKala?.RahuKala || ""),
         
-        "din_vishesh": "", // विशेष दिवस मॅन्युअल ठेवावे लागतात किंवा वेगळ्या API ने घ्यावे लागतात
+        "din_vishesh": "", 
         "location": "Pune",
         "is_manual_override": false
     };
@@ -128,7 +137,6 @@ async function fetchVedAstroData(dateObj) {
     return fetchedData;
 }
 
-// ३. ३ दिवसांचा डेटा मॅनेज करणे
 async function updatePanchang() {
     let existingData = {};
     if (fs.existsSync(PANCHANG_FILE)) {
@@ -152,7 +160,6 @@ async function updatePanchang() {
             console.log(`${dateKey} चा मॅन्युअल डेटा सुरक्षित ठेवला.`);
         } else {
             const apiResult = await fetchVedAstroData(dateObj);
-            // जुना मॅन्युअल डेटा असेल तर तो नवीन डेटामध्ये merge करा
             newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
             console.log(`${dateKey} चा डेटा लाईव्ह API वरून यशस्वीरित्या मॅप झाला.`);
         }
