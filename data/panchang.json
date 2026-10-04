@@ -9,7 +9,7 @@
     "nakshatra_end": "25:29",
     "yog": "वरीयान",
     "yog_time": "15:21",
-    "karan": "Bhav",
+    "karan": "बव",
     "karan_end": "08:00",
     "moon_rashi": "मिथुन",
     "sun_rashi": "कन्या",
@@ -21,7 +21,16 @@
     "rahukaal": "09:28 ते 10:57",
     "din_vishesh": "",
     "location": "Mumbai",
-    "is_manual_override": false
+    "is_manual_override": false,
+    "tithi_next": "अष्टमी",
+    "nakshatra_next": "पुनर्वसू",
+    "yog_next": "परिघ",
+    "karan_next": "बालव",
+    "samvatsar": "पराभव",
+    "shaka_samvat": "१९४८",
+    "vikram_samvat": "२०८३",
+    "ayan": "दक्षिणायन",
+    "ritu": "शरद"
   },
   "2026-10-04": {
     "date": "04-10-2026",
@@ -45,7 +54,16 @@
     "rahukaal": "16:55 ते 18:24",
     "din_vishesh": "",
     "location": "Mumbai",
-    "is_manual_override": false
+    "is_manual_override": false,
+    "tithi_next": "दशमी",
+    "nakshatra_next": "पुष्य",
+    "yog_next": "शिव",
+    "karan_next": "गरज",
+    "samvatsar": "पराभव",
+    "shaka_samvat": "१९४८",
+    "vikram_samvat": "२०८३",
+    "ayan": "दक्षिणायन",
+    "ritu": "शरद"
   },
   "2026-10-05": {
     "date": "05-10-2026",
@@ -69,6 +87,15 @@
     "rahukaal": "07:59 ते 09:28",
     "din_vishesh": "",
     "location": "Mumbai",
-    "is_manual_override": false
+    "is_manual_override": false,
+    "tithi_next": "एकादशी",
+    "nakshatra_next": "आश्लेषा",
+    "yog_next": "",
+    "karan_next": "",
+    "samvatsar": "पराभव",
+    "shaka_samvat": "१९४८",
+    "vikram_samvat": "२०८३",
+    "ayan": "दक्षिणायन",
+    "ritu": "शरद"
   }
 }
