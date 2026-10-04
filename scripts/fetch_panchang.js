@@ -164,7 +164,7 @@ const locTimeStr = `Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
         "rahukaal": extractRahukaal(rahuKala?.RahuKala || rahuKala),
         
         "din_vishesh": "", 
-        "location": "Pune",
+        "location": "mumbai",
         "is_manual_override": false
     };
 
