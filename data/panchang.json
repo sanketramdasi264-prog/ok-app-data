@@ -71,7 +71,7 @@
     "agnivas": "पृथ्वीवर अग्निवास आहे",
     "agnivas_badge": "पृथ्वीवर आहे",
     "location": "Pune",
-    "is_manual_override": true
+    "is_manual_override": false
   },
   "2026-10-05": {
     "date": "05-10-2026",
