@@ -45,7 +45,8 @@ const marathiMapping = {
     },
     lunarMonth: {
         "Chaitra": "चैत्र", "Vaishakha": "वैशाख", "Jyeshtha": "ज्येष्ठ", "Ashadha": "आषाढ",
-        "Shravana": "श्रावण", "Bhadrapada": "भाद्रपद", "Ashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक",
+        "Shravana": "श्रावण", "Bhadrapada": "भाद्रपद", "Bhaadrapada": "भाद्रपद", 
+        "Ashvina": "आश्विन", "Aashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक",
         "Margashirsha": "मार्गशीर्ष", "Pausha": "पौष", "Magha": "माघ", "Phalguna": "फाल्गुन"
     }
 };
