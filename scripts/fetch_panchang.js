@@ -59,7 +59,6 @@ function translate(category, englishWord) {
     return marathiMapping[category][englishWord] || englishWord;
 }
 
-// "27:54:16" मधून फक्त "27:54" काढण्यासाठी फंक्शन (FreeAstroAPI साठी)
 function formatTime(timeStr) {
     if (!timeStr) return "";
     const parts = timeStr.split(':');
@@ -69,7 +68,6 @@ function formatTime(timeStr) {
     return timeStr;
 }
 
-// VedAstro च्या रिझल्टमधून फक्त वेळ (HH:MM) काढण्यासाठी
 function extractVedAstroTime(timeData) {
     if (!timeData) return "";
     if (typeof timeData === 'object' && timeData.StdTime) {
@@ -94,7 +92,6 @@ async function fetchHybridData(dateObj) {
     
     console.log(`Fetching Hybrid Data (FreeAstro + VedAstro) for ${formattedDate}...`);
 
-    // १. मुख्य डेटा FreeAstroAPI कडून घेणे
     const payload = {
         year: yyyy, month: mm, date: dd, hours: 7, minutes: 0, seconds: 0,
         lat: 19.07609, lon: 72.877426, tz: 5.5
@@ -104,20 +101,28 @@ async function fetchHybridData(dateObj) {
     try {
         const response = await fetch("https://api.freeastroapi.com/api/v2/vedic/panchang", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+            headers: { 
+                "Content-Type": "application/json", 
+                "Accept": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+                "x-api-key": API_KEY 
+            },
             body: JSON.stringify(payload)
         });
+        
         if (response.ok) {
             freeAstroData = await response.json();
+            console.log("FreeAstro Data fetched successfully.");
+        } else {
+            const errorText = await response.text();
+            console.error(`FreeAstro Error: Status ${response.status} - ${errorText}`);
         }
     } catch (e) {
-        console.error("FreeAstro Fetch Error:", e);
+        console.error("FreeAstro Fetch Exception:", e);
     }
 
-    console.log("FreeAstro Data fetched. Waiting 2 seconds...");
     await delay(2000);
 
-    // २. फक्त चंद्रोदय आणि चंद्रास्त VedAstro कडून घेणे
     const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
     
@@ -131,7 +136,7 @@ async function fetchHybridData(dateObj) {
             moonRiseData = mrJson.Status === "Pass" ? mrJson.Payload : null;
         }
         console.log("Moonrise fetched from VedAstro. Waiting 15 seconds...");
-        await delay(15000); // VedAstro च्या रेट लिमिटसाठी १५ सेकंद थांबूया
+        await delay(15000); 
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) {
@@ -145,44 +150,32 @@ async function fetchHybridData(dateObj) {
     }
 
     if (!freeAstroData) {
-        console.log("Failed to fetch main data for", formattedDate);
+        console.log(`Failed to fetch main data for ${formattedDate}. Check FreeAstro Error above.`);
         return null;
     }
 
     const karanObj = (freeAstroData.karanas && freeAstroData.karanas.length > 0) ? freeAstroData.karanas[0] : null;
 
-    // ३. दोन्ही API चा डेटा एकत्र करणे
     const fetchedData = {
         "date": formattedDate,
         "weekday": translate("weekdays", freeAstroData.weekday?.name),
-        
         "tithi": translate("tithi", freeAstroData.tithi?.name),
         "tithi_end": formatTime(freeAstroData.tithi?.ends_at),
         "paksha": translate("paksha", freeAstroData.tithi?.paksha),
-        
         "nakshatra": translate("nakshatra", freeAstroData.nakshatra?.name),
         "nakshatra_end": formatTime(freeAstroData.nakshatra?.ends_at),
-        
         "yog": translate("yog", freeAstroData.yoga?.name),
         "yog_time": formatTime(freeAstroData.yoga?.ends_at),
-        
         "karan": translate("karan", karanObj?.name),
         "karan_end": formatTime(karanObj?.ends_at),
-        
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
-        
         "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
-        
         "sunrise": formatTime(freeAstroData.sunrise),
         "sunset": formatTime(freeAstroData.sunset),
-        
-        // VedAstro कडून आलेला चंद्रोदय आणि चंद्रास्त
         "moonrise": extractVedAstroTime(moonRiseData?.MoonriseTime || moonRiseData), 
         "moonset": extractVedAstroTime(moonSetData?.MoonsetTime || moonSetData),
-        
         "rahukaal": `${formatTime(freeAstroData.rahu_kalam?.start)} ते ${formatTime(freeAstroData.rahu_kalam?.end)}`,
-        
         "din_vishesh": "", 
         "location": "Mumbai",
         "is_manual_override": false
