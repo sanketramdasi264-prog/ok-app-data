@@ -71,7 +71,6 @@ function extractTime(timeData) {
     return "";
 }
 
-// नवीन: राहुकाळ मधून "09:26 ते 10:54" असे काढणारे फंक्शन
 function extractRahukaal(rkData) {
     if (!rkData) return "";
     if (typeof rkData === 'string') return rkData;
@@ -83,7 +82,6 @@ function extractRahukaal(rkData) {
     return "";
 }
 
-// नवीन: राशीचे नाव अचूक काढणारे फंक्शन
 function extractRashi(rashiData) {
     if (!rashiData) return "";
     if (typeof rashiData === 'string') return rashiData;
@@ -92,6 +90,9 @@ function extractRashi(rashiData) {
     }
     return "";
 }
+
+// 1 मिनिटात 4 रिक्वेस्ट (15 सेकंदांचा गॅप)
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchApiData(url) {
     try {
@@ -116,21 +117,29 @@ async function fetchVedAstroData(dateObj) {
     const baseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Pune/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
 
-    const [
-        panchangaTable,
-        rahuKala,
-        moonRise,
-        moonSet,
-        moonRashi,
-        sunRashi
-    ] = await Promise.all([
-        fetchApiData(`${baseUrl}/PanchangaTable/${locTimeStr}`),
-        fetchApiData(`${baseUrl}/RahuKala/${locTimeStr}`),
-        fetchApiData(`${baseUrl}/MoonriseTime/${locTimeStr}`),
-        fetchApiData(`${baseUrl}/MoonsetTime/${locTimeStr}`),
-        fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Moon/${locTimeStr}/divisionalChart/D1`),
-        fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Sun/${locTimeStr}/divisionalChart/D1`)
-    ]);
+    const panchangaTable = await fetchApiData(`${baseUrl}/PanchangaTable/${locTimeStr}`);
+    console.log("PanchangaTable fetched. Waiting 15 seconds...");
+    await delay(15000);
+
+    const rahuKala = await fetchApiData(`${baseUrl}/RahuKala/${locTimeStr}`);
+    console.log("RahuKala fetched. Waiting 15 seconds...");
+    await delay(15000);
+
+    const moonRise = await fetchApiData(`${baseUrl}/MoonriseTime/${locTimeStr}`);
+    console.log("Moonrise fetched. Waiting 15 seconds...");
+    await delay(15000);
+
+    const moonSet = await fetchApiData(`${baseUrl}/MoonsetTime/${locTimeStr}`);
+    console.log("Moonset fetched. Waiting 15 seconds...");
+    await delay(15000);
+
+    const moonRashi = await fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Moon/${locTimeStr}/divisionalChart/D1`);
+    console.log("MoonRashi fetched. Waiting 15 seconds...");
+    await delay(15000);
+
+    const sunRashi = await fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Sun/${locTimeStr}/divisionalChart/D1`);
+    console.log("SunRashi fetched. Waiting 15 seconds...");
+    await delay(15000);
 
     const pt = panchangaTable?.PanchangaTable || {};
 
@@ -145,7 +154,6 @@ async function fetchVedAstroData(dateObj) {
         "yog": translate("yog", extractName(pt.Yoga)),
         "karan": translate("karan", extractName(pt.Karana)),
         
-        // राशीसाठी नवीन फंक्शन वापरले
         "moon_rashi": translate("rashi", extractRashi(moonRashi)),
         "sun_rashi": translate("rashi", extractRashi(sunRashi)),
         
@@ -154,7 +162,6 @@ async function fetchVedAstroData(dateObj) {
         "moonrise": extractTime(moonRise?.MoonriseTime || moonRise),
         "moonset": extractTime(moonSet?.MoonsetTime || moonSet),
         
-        // राहुकाळसाठी नवीन फंक्शन वापरले
         "rahukaal": extractRahukaal(rahuKala?.RahuKala || rahuKala),
         
         "din_vishesh": "", 
@@ -190,10 +197,6 @@ async function updatePanchang() {
             const apiResult = await fetchVedAstroData(dateObj);
             newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
             console.log(`${dateKey} चा डेटा लाईव्ह API वरून यशस्वीरित्या मॅप झाला.`);
-            
-            // API सर्व्हरने ब्लॉक करू नये म्हणून २ सेकंद थांबण्याची व्यवस्था (Rate Limit Protection)
-            console.log("पुढच्या दिवसाचा डेटा घेण्यापूर्वी २ सेकंद थांबत आहे...");
-            await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
 
