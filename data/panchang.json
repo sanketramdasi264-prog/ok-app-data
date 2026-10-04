@@ -17,7 +17,7 @@
     "karan_next": "बालव",
     "sunrise": "06:33",
     "sunset": "18:22",
-    "moonrise": "00:14",
+    "moonrise": "24:14",
     "moonset": "12:57",
     "rahukaal": "09:30 ते 10:59",
     "moon_rashi": "",
@@ -33,8 +33,9 @@
     "din_vishesh": "",
     "agnivas": "पृथ्वीवर अग्निवास नाही",
     "agnivas_badge": "पृथ्वीवर नाही",
-    "location": "mumbai",
-    "is_manual_override": false
+    "location": "Mumbai",
+    "is_manual_override": false,
+    "lunar_month": "Bhaadrapada"
   },
   "2026-10-04": {
     "date": "04-10-2026",
@@ -49,14 +50,14 @@
     "yog": "परिघ",
     "yog_time": "१६:२०",
     "yog_next": "धृती",
-    "karan": "तैतिल",
+    "karan": "Taitula",
     "karan_end": "०९:४२",
     "karan_next": "तैतिल",
-    "sunrise": "06:29",
-    "sunset": "18:17",
-    "moonrise": "01:15",
-    "moonset": "13:48",
-    "rahukaal": "16:48 ते 18:17",
+    "sunrise": "06:33",
+    "sunset": "18:21",
+    "moonrise": "25:18",
+    "moonset": "13:53",
+    "rahukaal": "16:52 ते 18:21",
     "moon_rashi": "",
     "sun_rashi": "",
     "guru_rashi": "मिथुन",
@@ -70,8 +71,9 @@
     "din_vishesh": "",
     "agnivas": "पृथ्वीवर अग्निवास आहे",
     "agnivas_badge": "पृथ्वीवर आहे",
-    "location": "Pune",
-    "is_manual_override": false
+    "location": "Mumbai",
+    "is_manual_override": false,
+    "lunar_month": "Bhaadrapada"
   },
   "2026-10-05": {
     "date": "05-10-2026",
@@ -107,7 +109,8 @@
     "din_vishesh": "",
     "agnivas": "आकाशे अग्निवास (पृथ्वीवर नाही)",
     "agnivas_badge": "पृथ्वीवर नाही",
-    "location": "mumbai",
-    "is_manual_override": false
+    "location": "Mumbai",
+    "is_manual_override": false,
+    "lunar_month": "Bhaadrapada"
   }
 }
