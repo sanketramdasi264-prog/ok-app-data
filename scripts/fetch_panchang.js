@@ -3,7 +3,6 @@ const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 
-// १. अपडेटेड मराठी डिक्शनरी
 const marathiMapping = {
     tithi: {
         "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
@@ -50,7 +49,6 @@ function translate(category, englishWord) {
     return marathiMapping[category][englishWord] || englishWord;
 }
 
-// नाव वेगळे काढण्यासाठी फंक्शन (उदा. "Aridra - 1" मधून "Aridra")
 function extractName(data) {
     if (!data) return "";
     let nameStr = "";
@@ -62,15 +60,35 @@ function extractName(data) {
     return nameStr.split(' - ')[0].trim();
 }
 
-// वेळेच्या Object मधून फक्त वेळ (उदा. "06:28") काढण्यासाठी फंक्शन
 function extractTime(timeData) {
     if (!timeData) return "";
     if (typeof timeData === 'object' && timeData.StdTime) {
-        // "06:28 03/10..." मधून फक्त "06:28" वेगळे करेल
         return timeData.StdTime.split(' ')[0]; 
     }
     if (typeof timeData === 'string') {
         return timeData.split(' ')[0];
+    }
+    return "";
+}
+
+// नवीन: राहुकाळ मधून "09:26 ते 10:54" असे काढणारे फंक्शन
+function extractRahukaal(rkData) {
+    if (!rkData) return "";
+    if (typeof rkData === 'string') return rkData;
+    if (rkData.Start && rkData.End) {
+        const start = extractTime(rkData.Start);
+        const end = extractTime(rkData.End);
+        if (start && end) return `${start} ते ${end}`;
+    }
+    return "";
+}
+
+// नवीन: राशीचे नाव अचूक काढणारे फंक्शन
+function extractRashi(rashiData) {
+    if (!rashiData) return "";
+    if (typeof rashiData === 'string') return rashiData;
+    if (rashiData.PlanetZodiacSignInDivisionalChart && rashiData.PlanetZodiacSignInDivisionalChart.ZodiacSign) {
+        return rashiData.PlanetZodiacSignInDivisionalChart.ZodiacSign.Name;
     }
     return "";
 }
@@ -115,7 +133,6 @@ async function fetchVedAstroData(dateObj) {
     ]);
 
     const pt = panchangaTable?.PanchangaTable || {};
-    const getZodiacName = (rashiData) => rashiData?.PlanetZodiacSignInDivisionalChart?.ZodiacSign?.Name || (typeof rashiData === 'string' ? rashiData : "");
 
     const fetchedData = {
         "date": formattedDate,
@@ -128,17 +145,17 @@ async function fetchVedAstroData(dateObj) {
         "yog": translate("yog", extractName(pt.Yoga)),
         "karan": translate("karan", extractName(pt.Karana)),
         
-        "moon_rashi": translate("rashi", getZodiacName(moonRashi)),
-        "sun_rashi": translate("rashi", getZodiacName(sunRashi)),
+        // राशीसाठी नवीन फंक्शन वापरले
+        "moon_rashi": translate("rashi", extractRashi(moonRashi)),
+        "sun_rashi": translate("rashi", extractRashi(sunRashi)),
         
-        // येथे extractTime() वापरले आहे
         "sunrise": extractTime(pt.Sunrise),
         "sunset": extractTime(pt.Sunset),
         "moonrise": extractTime(moonRise?.MoonriseTime || moonRise),
         "moonset": extractTime(moonSet?.MoonsetTime || moonSet),
         
-        // राहुकाळ स्ट्रिंग म्हणून सेव्ह करण्यासाठी
-        "rahukaal": typeof rahuKala === 'string' ? rahuKala : (rahuKala?.RahuKala || ""),
+        // राहुकाळसाठी नवीन फंक्शन वापरले
+        "rahukaal": extractRahukaal(rahuKala?.RahuKala || rahuKala),
         
         "din_vishesh": "", 
         "location": "Pune",
@@ -173,6 +190,10 @@ async function updatePanchang() {
             const apiResult = await fetchVedAstroData(dateObj);
             newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
             console.log(`${dateKey} चा डेटा लाईव्ह API वरून यशस्वीरित्या मॅप झाला.`);
+            
+            // API सर्व्हरने ब्लॉक करू नये म्हणून २ सेकंद थांबण्याची व्यवस्था (Rate Limit Protection)
+            console.log("पुढच्या दिवसाचा डेटा घेण्यापूर्वी २ सेकंद थांबत आहे...");
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
 
