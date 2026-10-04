@@ -3,6 +3,9 @@ const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 
+// API Key (FreeAstroAPI)
+const API_KEY = "841fcb1c925b06c53058eed60882c15e797be1a30486a080a40c6a09a2f2e65d";
+
 const marathiMapping = {
     tithi: {
         "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
@@ -11,7 +14,7 @@ const marathiMapping = {
         "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी", "Purnima": "पौर्णिमा", "Amavasya": "अमावस्या"
     },
     paksha: {
-        "Shukla": "शुक्ल", "Krishna": "कृष्ण", "Bright": "शुक्ल", "Dark": "कृष्ण", "WhiteHalf": "शुक्ल", "DarkHalf": "कृष्ण"
+        "Shukla": "शुक्ल", "Krishna": "कृष्ण", "Bright": "शुक्ल", "Dark": "कृष्ण"
     },
     nakshatra: {
         "Ashvini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका", "Rohini": "रोहिणी",
@@ -30,8 +33,9 @@ const marathiMapping = {
         "Priti": "प्रीती", "Ayushmana": "आयुष्मान", "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगंड"
     },
     karan: {
-        "Bava": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल", "Gara": "गरज", "Vanija": "वणिज",
-        "Vishti": "भद्रा", "Shakuni": "शकुनी", "Chatushpada": "चतुष्पाद", "Naga": "नाग", "Kinstughna": "किंस्तुघ्न"
+        "Bava": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल", "Tetil": "तैतिल", 
+        "Gara": "गरज", "Gar": "गरज", "Vanija": "वणिज", "Vishti": "भद्रा", "Shakuni": "शकुनी", 
+        "Chatushpada": "चतुष्पाद", "Naga": "नाग", "Kinstughna": "किंस्तुघ्न"
     },
     rashi: {
         "Aries": "मेष", "Taurus": "वृषभ", "Gemini": "मिथुन", "Cancer": "कर्क",
@@ -45,8 +49,8 @@ const marathiMapping = {
     lunarMonth: {
         "Chaitra": "चैत्र", "Vaishakha": "वैशाख", "Jyeshtha": "ज्येष्ठ", "Ashadha": "आषाढ",
         "Shravana": "श्रावण", "Bhadrapada": "भाद्रपद", "Bhaadrapada": "भाद्रपद", 
-        "Ashvina": "आश्विन", "Aashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक",
-        "Margashirsha": "मार्गशीर्ष", "Pausha": "पौष", "Magha": "माघ", "Phalguna": "फाल्गुन"
+        "Ashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक", "Margashirsha": "मार्गशीर्ष", 
+        "Pausha": "पौष", "Magha": "माघ", "Phalguna": "फाल्गुन"
     }
 };
 
@@ -55,152 +59,129 @@ function translate(category, englishWord) {
     return marathiMapping[category][englishWord] || englishWord;
 }
 
-function extractName(data) {
-    if (!data) return "";
-    let nameStr = "";
-    if (typeof data === 'object' && data.Name) {
-        nameStr = data.Name;
-    } else if (typeof data === 'string') {
-        nameStr = data;
-    }
-    return nameStr.split(' - ')[0].trim();
-}
-
-function extractTime(timeData, baseDateObj) {
-    if (!timeData) return "";
-    let timeStr = "";
-    let dateStr = "";
-
-    if (typeof timeData === 'object' && timeData.StdTime) {
-        const parts = timeData.StdTime.split(' ');
-        timeStr = parts[0]; 
-        dateStr = parts[1]; 
-    } else if (typeof timeData === 'string') {
-        const parts = timeData.split(' ');
-        timeStr = parts[0];
-        dateStr = parts[1];
-    }
-
+// "27:54:16" मधून फक्त "27:54" काढण्यासाठी फंक्शन (FreeAstroAPI साठी)
+function formatTime(timeStr) {
     if (!timeStr) return "";
-
-    if (dateStr && dateStr.includes('/') && baseDateObj) {
-        const [d, m, y] = dateStr.split('/');
-        const eventDate = new Date(`${y}-${m}-${d}`);
-        eventDate.setHours(0, 0, 0, 0);
-
-        const baseDate = new Date(baseDateObj);
-        baseDate.setHours(0, 0, 0, 0);
-
-        if (eventDate > baseDate) {
-            const diffTime = Math.abs(eventDate - baseDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            
-            let [hours, minutes] = timeStr.split(':');
-            hours = parseInt(hours, 10) + (24 * diffDays);
-            return `${String(hours).padStart(2, '0')}:${minutes}`;
-        }
+    const parts = timeStr.split(':');
+    if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`;
     }
     return timeStr;
 }
 
-function extractRahukaal(rkData, baseDateObj) {
-    if (!rkData) return "";
-    if (typeof rkData === 'string') return rkData;
-    if (rkData.Start && rkData.End) {
-        const start = extractTime(rkData.Start, baseDateObj);
-        const end = extractTime(rkData.End, baseDateObj);
-        if (start && end) return `${start} ते ${end}`;
+// VedAstro च्या रिझल्टमधून फक्त वेळ (HH:MM) काढण्यासाठी
+function extractVedAstroTime(timeData) {
+    if (!timeData) return "";
+    if (typeof timeData === 'object' && timeData.StdTime) {
+        return timeData.StdTime.split(' ')[0]; 
     }
-    return "";
-}
-
-function extractRashi(rashiData) {
-    if (!rashiData) return "";
-    if (typeof rashiData === 'string') return rashiData;
-    if (rashiData.PlanetZodiacSignInDivisionalChart && rashiData.PlanetZodiacSignInDivisionalChart.ZodiacSign) {
-        return rashiData.PlanetZodiacSignInDivisionalChart.ZodiacSign.Name;
+    if (typeof timeData === 'string') {
+        return timeData.split(' ')[0];
     }
     return "";
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function fetchApiData(url) {
+async function fetchHybridData(dateObj) {
+    const yyyy = dateObj.getFullYear();
+    const mm = dateObj.getMonth() + 1;
+    const dd = dateObj.getDate();
+    
+    const ddStr = String(dd).padStart(2, '0');
+    const mmStr = String(mm).padStart(2, '0');
+    const formattedDate = `${ddStr}-${mmStr}-${yyyy}`;
+    
+    console.log(`Fetching Hybrid Data (FreeAstro + VedAstro) for ${formattedDate}...`);
+
+    // १. मुख्य डेटा FreeAstroAPI कडून घेणे
+    const payload = {
+        year: yyyy, month: mm, date: dd, hours: 7, minutes: 0, seconds: 0,
+        lat: 19.07609, lon: 72.877426, tz: 5.5
+    };
+
+    let freeAstroData = null;
     try {
-        const response = await fetch(url);
-        if (!response.ok) return null;
-        const json = await response.json();
-        return json.Status === "Pass" ? json.Payload : null;
+        const response = await fetch("https://api.freeastroapi.com/api/v2/vedic/panchang", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+            body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+            freeAstroData = await response.json();
+        }
     } catch (e) {
-        console.error("API Error fetching:", url, e);
+        console.error("FreeAstro Fetch Error:", e);
+    }
+
+    console.log("FreeAstro Data fetched. Waiting 2 seconds...");
+    await delay(2000);
+
+    // २. फक्त चंद्रोदय आणि चंद्रास्त VedAstro कडून घेणे
+    const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
+    const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
+    
+    let moonRiseData = null;
+    let moonSetData = null;
+
+    try {
+        const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
+        if (mrRes.ok) {
+            const mrJson = await mrRes.json();
+            moonRiseData = mrJson.Status === "Pass" ? mrJson.Payload : null;
+        }
+        console.log("Moonrise fetched from VedAstro. Waiting 15 seconds...");
+        await delay(15000); // VedAstro च्या रेट लिमिटसाठी १५ सेकंद थांबूया
+
+        const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
+        if (msRes.ok) {
+            const msJson = await msRes.json();
+            moonSetData = msJson.Status === "Pass" ? msJson.Payload : null;
+        }
+        console.log("Moonset fetched from VedAstro. Waiting 15 seconds...");
+        await delay(15000);
+    } catch (e) {
+        console.error("VedAstro Fetch Error:", e);
+    }
+
+    if (!freeAstroData) {
+        console.log("Failed to fetch main data for", formattedDate);
         return null;
     }
-}
 
-async function fetchVedAstroData(dateObj) {
-    const dd = String(dateObj.getDate()).padStart(2, '0');
-    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const yyyy = dateObj.getFullYear();
-    const formattedDate = `${dd}-${mm}-${yyyy}`;
-    
-    console.log(`Fetching Live Data for ${formattedDate}...`);
+    const karanObj = (freeAstroData.karanas && freeAstroData.karanas.length > 0) ? freeAstroData.karanas[0] : null;
 
-    const baseUrl = `https://api.vedastro.org/api/Calculate`;
-    const locTimeStr = `Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
-
-    const panchangaTable = await fetchApiData(`${baseUrl}/PanchangaTable/${locTimeStr}`);
-    console.log("PanchangaTable fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const rahuKala = await fetchApiData(`${baseUrl}/RahuKala/${locTimeStr}`);
-    console.log("RahuKala fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const moonRise = await fetchApiData(`${baseUrl}/MoonriseTime/${locTimeStr}`);
-    console.log("Moonrise fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const moonSet = await fetchApiData(`${baseUrl}/MoonsetTime/${locTimeStr}`);
-    console.log("Moonset fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const moonRashi = await fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Moon/${locTimeStr}/divisionalChart/D1`);
-    console.log("MoonRashi fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const sunRashi = await fetchApiData(`${baseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Sun/${locTimeStr}/divisionalChart/D1`);
-    console.log("SunRashi fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const lunarMonthApi = await fetchApiData(`${baseUrl}/LunarMonth/${locTimeStr}`);
-    console.log("LunarMonth fetched. Waiting 15 seconds...");
-    await delay(15000);
-
-    const pt = panchangaTable?.PanchangaTable || {};
-
-    const pakshaMarathi = translate("paksha", pt.Tithi?.Paksha || pt.Tithi?.Phase || "");
-    const finalLunarMonth = translate("lunarMonth", extractName(lunarMonthApi?.LunarMonth || lunarMonthApi));
-
+    // ३. दोन्ही API चा डेटा एकत्र करणे
     const fetchedData = {
         "date": formattedDate,
-        "weekday": translate("weekdays", pt.DayOfWeek || dateObj.toLocaleDateString('en-US', { weekday: 'long' })),
+        "weekday": translate("weekdays", freeAstroData.weekday?.name),
         
-        "tithi": translate("tithi", extractName(pt.Tithi)), 
-        "paksha": pakshaMarathi,
-        "nakshatra": translate("nakshatra", extractName(pt.Nakshatra)),
-        "yog": translate("yog", extractName(pt.Yoga)),
-        "karan": translate("karan", extractName(pt.Karana)),
+        "tithi": translate("tithi", freeAstroData.tithi?.name),
+        "tithi_end": formatTime(freeAstroData.tithi?.ends_at),
+        "paksha": translate("paksha", freeAstroData.tithi?.paksha),
         
-        "moon_rashi": translate("rashi", extractRashi(moonRashi)),
-        "sun_rashi": translate("rashi", extractRashi(sunRashi)),
+        "nakshatra": translate("nakshatra", freeAstroData.nakshatra?.name),
+        "nakshatra_end": formatTime(freeAstroData.nakshatra?.ends_at),
         
-        "lunar_month": finalLunarMonth,
+        "yog": translate("yog", freeAstroData.yoga?.name),
+        "yog_time": formatTime(freeAstroData.yoga?.ends_at),
         
-        "sunrise": extractTime(pt.Sunrise, dateObj),
-        "sunset": extractTime(pt.Sunset, dateObj),
-        "moonrise": extractTime(moonRise?.MoonriseTime || moonRise, dateObj),
-        "moonset": extractTime(moonSet?.MoonsetTime || moonSet, dateObj),
-        "rahukaal": extractRahukaal(rahuKala?.RahuKala || rahuKala, dateObj),
+        "karan": translate("karan", karanObj?.name),
+        "karan_end": formatTime(karanObj?.ends_at),
+        
+        "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
+        "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
+        
+        "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
+        
+        "sunrise": formatTime(freeAstroData.sunrise),
+        "sunset": formatTime(freeAstroData.sunset),
+        
+        // VedAstro कडून आलेला चंद्रोदय आणि चंद्रास्त
+        "moonrise": extractVedAstroTime(moonRiseData?.MoonriseTime || moonRiseData), 
+        "moonset": extractVedAstroTime(moonSetData?.MoonsetTime || moonSetData),
+        
+        "rahukaal": `${formatTime(freeAstroData.rahu_kalam?.start)} ते ${formatTime(freeAstroData.rahu_kalam?.end)}`,
         
         "din_vishesh": "", 
         "location": "Mumbai",
@@ -232,9 +213,11 @@ async function updatePanchang() {
             newData[dateKey] = existingData[dateKey];
             console.log(`${dateKey} चा मॅन्युअल डेटा सुरक्षित ठेवला.`);
         } else {
-            const apiResult = await fetchVedAstroData(dateObj);
-            newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
-            console.log(`${dateKey} चा डेटा लाईव्ह API वरून यशस्वीरित्या मॅप झाला.`);
+            const apiResult = await fetchHybridData(dateObj);
+            if (apiResult) {
+                newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
+                console.log(`${dateKey} चा हायब्रिड डेटा यशस्वीरित्या मॅप झाला.`);
+            }
         }
     }
 
