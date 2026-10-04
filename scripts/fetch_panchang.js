@@ -3,6 +3,7 @@ const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 
+// डिक्शनरीमध्ये lunarMonth (महिना) ॲड केला आहे
 const marathiMapping = {
     tithi: {
         "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
@@ -41,6 +42,11 @@ const marathiMapping = {
     weekdays: {
         "Sunday": "रविवार", "Monday": "सोमवार", "Tuesday": "मंगळवार", "Wednesday": "बुधवार",
         "Thursday": "गुरुवार", "Friday": "शुक्रवार", "Saturday": "शनिवार"
+    },
+    lunarMonth: {
+        "Chaitra": "चैत्र", "Vaishakha": "वैशाख", "Jyeshtha": "ज्येष्ठ", "Ashadha": "आषाढ",
+        "Shravana": "श्रावण", "Bhadrapada": "भाद्रपद", "Ashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक",
+        "Margashirsha": "मार्गशीर्ष", "Pausha": "पौष", "Magha": "माघ", "Phalguna": "फाल्गुन"
     }
 };
 
@@ -60,23 +66,50 @@ function extractName(data) {
     return nameStr.split(' - ')[0].trim();
 }
 
-function extractTime(timeData) {
+// नवीन २४+ तासांचे लॉजिक (जर वेळ दुसऱ्या दिवशीची असेल तर +24 करेल)
+function extractTime(timeData, baseDateObj) {
     if (!timeData) return "";
+    let timeStr = "";
+    let dateStr = "";
+
     if (typeof timeData === 'object' && timeData.StdTime) {
-        return timeData.StdTime.split(' ')[0]; 
+        const parts = timeData.StdTime.split(' ');
+        timeStr = parts[0]; 
+        dateStr = parts[1]; 
+    } else if (typeof timeData === 'string') {
+        const parts = timeData.split(' ');
+        timeStr = parts[0];
+        dateStr = parts[1];
     }
-    if (typeof timeData === 'string') {
-        return timeData.split(' ')[0];
+
+    if (!timeStr) return "";
+
+    if (dateStr && dateStr.includes('/') && baseDateObj) {
+        const [d, m, y] = dateStr.split('/');
+        const eventDate = new Date(`${y}-${m}-${d}`);
+        eventDate.setHours(0, 0, 0, 0);
+
+        const baseDate = new Date(baseDateObj);
+        baseDate.setHours(0, 0, 0, 0);
+
+        if (eventDate > baseDate) {
+            const diffTime = Math.abs(eventDate - baseDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            let [hours, minutes] = timeStr.split(':');
+            hours = parseInt(hours, 10) + (24 * diffDays);
+            return `${String(hours).padStart(2, '0')}:${minutes}`;
+        }
     }
-    return "";
+    return timeStr;
 }
 
-function extractRahukaal(rkData) {
+function extractRahukaal(rkData, baseDateObj) {
     if (!rkData) return "";
     if (typeof rkData === 'string') return rkData;
     if (rkData.Start && rkData.End) {
-        const start = extractTime(rkData.Start);
-        const end = extractTime(rkData.End);
+        const start = extractTime(rkData.Start, baseDateObj);
+        const end = extractTime(rkData.End, baseDateObj);
         if (start && end) return `${start} ते ${end}`;
     }
     return "";
@@ -91,7 +124,20 @@ function extractRashi(rashiData) {
     return "";
 }
 
-// 1 मिनिटात 4 रिक्वेस्ट (15 सेकंदांचा गॅप)
+// महाराष्ट्रासाठी (अमावास्यांत) महिन्याचे लॉजिक
+function getAmavasyantMonth(purnimantMonth, paksha) {
+    const months = ["चैत्र", "वैशाख", "ज्येष्ठ", "आषाढ", "श्रावण", "भाद्रपद", "आश्विन", "कार्तिक", "मार्गशीर्ष", "पौष", "माघ", "फाल्गुन"];
+    
+    if (paksha === "कृष्ण") {
+        let index = months.indexOf(purnimantMonth);
+        if (index !== -1) {
+            let prevIndex = (index === 0) ? 11 : index - 1;
+            return months[prevIndex];
+        }
+    }
+    return purnimantMonth;
+}
+
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchApiData(url) {
@@ -115,7 +161,8 @@ async function fetchVedAstroData(dateObj) {
     console.log(`Fetching Live Data for ${formattedDate}...`);
 
     const baseUrl = `https://api.vedastro.org/api/Calculate`;
-const locTimeStr = `Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
+    const locTimeStr = `Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
+
     const panchangaTable = await fetchApiData(`${baseUrl}/PanchangaTable/${locTimeStr}`);
     console.log("PanchangaTable fetched. Waiting 15 seconds...");
     await delay(15000);
@@ -140,15 +187,24 @@ const locTimeStr = `Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
     console.log("SunRashi fetched. Waiting 15 seconds...");
     await delay(15000);
 
+    // चंद्र मास (महिना) घेण्यासाठी नवीन API कॉल
+    const lunarMonthApi = await fetchApiData(`${baseUrl}/LunarMonth/${locTimeStr}`);
+    console.log("LunarMonth fetched. Waiting 15 seconds...");
+    await delay(15000);
+
     const pt = panchangaTable?.PanchangaTable || {};
+
+    // अमावास्यांत महिना कॅल्क्युलेशन
+    const pakshaMarathi = translate("paksha", pt.Tithi?.Paksha || pt.Tithi?.Phase || "");
+    const purnimantMonth = translate("lunarMonth", extractName(lunarMonthApi?.LunarMonth || lunarMonthApi));
+    const amavasyantMonth = getAmavasyantMonth(purnimantMonth, pakshaMarathi);
 
     const fetchedData = {
         "date": formattedDate,
         "weekday": translate("weekdays", pt.DayOfWeek || dateObj.toLocaleDateString('en-US', { weekday: 'long' })),
         
         "tithi": translate("tithi", extractName(pt.Tithi)), 
-        "paksha": translate("paksha", pt.Tithi?.Paksha || pt.Tithi?.Phase || ""),
-        
+        "paksha": pakshaMarathi,
         "nakshatra": translate("nakshatra", extractName(pt.Nakshatra)),
         "yog": translate("yog", extractName(pt.Yoga)),
         "karan": translate("karan", extractName(pt.Karana)),
@@ -156,15 +212,18 @@ const locTimeStr = `Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
         "moon_rashi": translate("rashi", extractRashi(moonRashi)),
         "sun_rashi": translate("rashi", extractRashi(sunRashi)),
         
-        "sunrise": extractTime(pt.Sunrise),
-        "sunset": extractTime(pt.Sunset),
-        "moonrise": extractTime(moonRise?.MoonriseTime || moonRise),
-        "moonset": extractTime(moonSet?.MoonsetTime || moonSet),
+        // नवीन 'अमावास्यांत' महिना सेव्ह करत आहोत
+        "lunar_month": amavasyantMonth,
         
-        "rahukaal": extractRahukaal(rahuKala?.RahuKala || rahuKala),
+        // baseDateObj पास केले आहे जेणेकरून 24+ लॉजिक काम करेल
+        "sunrise": extractTime(pt.Sunrise, dateObj),
+        "sunset": extractTime(pt.Sunset, dateObj),
+        "moonrise": extractTime(moonRise?.MoonriseTime || moonRise, dateObj),
+        "moonset": extractTime(moonSet?.MoonsetTime || moonSet, dateObj),
+        "rahukaal": extractRahukaal(rahuKala?.RahuKala || rahuKala, dateObj),
         
         "din_vishesh": "", 
-        "location": "mumbai",
+        "location": "Mumbai",
         "is_manual_override": false
     };
 
