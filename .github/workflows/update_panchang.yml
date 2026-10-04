@@ -1,0 +1,32 @@
+name: Daily Panchang Auto Update
+
+on:
+  schedule:
+    # 18:30 UTC का मतलब है भारतीय समयानुसार (IST) रात 12:00 बजे
+    - cron: '30 18 * * *'
+  workflow_dispatch: # यह बटन आपको अपनी मर्जी से कभी भी स्क्रिप्ट रन करने की सुविधा देता है
+
+jobs:
+  update-panchang:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Fetch Script
+        run: node scripts/fetch_panchang.js
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/panchang.json
+          
+          # अगर JSON फाइल में कोई बदलाव हुआ है, तभी कमिट और पुश करें
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update Panchang data for today" && git push)
