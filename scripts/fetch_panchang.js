@@ -92,9 +92,17 @@ async function fetchHybridData(dateObj) {
     
     console.log(`Fetching Hybrid Data (FreeAstro + VedAstro) for ${formattedDate}...`);
 
+    // **हाच तो महत्त्वाचा बदल: Payload मधील स्पेलिंग दुरुस्त केली आहेत**
     const payload = {
-        year: yyyy, month: mm, date: dd, hours: 7, minutes: 0, seconds: 0,
-        lat: 19.07609, lon: 72.877426, tz: 5.5
+        year: yyyy, 
+        month: mm, 
+        day: dd, 
+        hour: 7, 
+        minute: 0, 
+        second: 0,
+        lat: 19.07609, 
+        lon: 72.877426, 
+        tz: 5.5
     };
 
     let freeAstroData = null;
