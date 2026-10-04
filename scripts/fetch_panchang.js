@@ -3,7 +3,6 @@ const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 
-// डिक्शनरीमध्ये lunarMonth (महिना) ॲड केला आहे
 const marathiMapping = {
     tithi: {
         "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
@@ -67,7 +66,6 @@ function extractName(data) {
     return nameStr.split(' - ')[0].trim();
 }
 
-// नवीन २४+ तासांचे लॉजिक (जर वेळ दुसऱ्या दिवशीची असेल तर +24 करेल)
 function extractTime(timeData, baseDateObj) {
     if (!timeData) return "";
     let timeStr = "";
@@ -125,20 +123,6 @@ function extractRashi(rashiData) {
     return "";
 }
 
-// महाराष्ट्रासाठी (अमावास्यांत) महिन्याचे लॉजिक
-function getAmavasyantMonth(purnimantMonth, paksha) {
-    const months = ["चैत्र", "वैशाख", "ज्येष्ठ", "आषाढ", "श्रावण", "भाद्रपद", "आश्विन", "कार्तिक", "मार्गशीर्ष", "पौष", "माघ", "फाल्गुन"];
-    
-    if (paksha === "कृष्ण") {
-        let index = months.indexOf(purnimantMonth);
-        if (index !== -1) {
-            let prevIndex = (index === 0) ? 11 : index - 1;
-            return months[prevIndex];
-        }
-    }
-    return purnimantMonth;
-}
-
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchApiData(url) {
@@ -188,17 +172,14 @@ async function fetchVedAstroData(dateObj) {
     console.log("SunRashi fetched. Waiting 15 seconds...");
     await delay(15000);
 
-    // चंद्र मास (महिना) घेण्यासाठी नवीन API कॉल
     const lunarMonthApi = await fetchApiData(`${baseUrl}/LunarMonth/${locTimeStr}`);
     console.log("LunarMonth fetched. Waiting 15 seconds...");
     await delay(15000);
 
     const pt = panchangaTable?.PanchangaTable || {};
 
-    // अमावास्यांत महिना कॅल्क्युलेशन
     const pakshaMarathi = translate("paksha", pt.Tithi?.Paksha || pt.Tithi?.Phase || "");
-    const purnimantMonth = translate("lunarMonth", extractName(lunarMonthApi?.LunarMonth || lunarMonthApi));
-    const amavasyantMonth = getAmavasyantMonth(purnimantMonth, pakshaMarathi);
+    const finalLunarMonth = translate("lunarMonth", extractName(lunarMonthApi?.LunarMonth || lunarMonthApi));
 
     const fetchedData = {
         "date": formattedDate,
@@ -213,10 +194,8 @@ async function fetchVedAstroData(dateObj) {
         "moon_rashi": translate("rashi", extractRashi(moonRashi)),
         "sun_rashi": translate("rashi", extractRashi(sunRashi)),
         
-        // नवीन 'अमावास्यांत' महिना सेव्ह करत आहोत
-        "lunar_month": amavasyantMonth,
+        "lunar_month": finalLunarMonth,
         
-        // baseDateObj पास केले आहे जेणेकरून 24+ लॉजिक काम करेल
         "sunrise": extractTime(pt.Sunrise, dateObj),
         "sunset": extractTime(pt.Sunset, dateObj),
         "moonrise": extractTime(moonRise?.MoonriseTime || moonRise, dateObj),
