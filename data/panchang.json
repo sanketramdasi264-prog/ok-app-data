@@ -1,27 +1,82 @@
 {
   "2026-10-03": {
     "date": "03-10-2026",
-    "weekday": "शनिवार",
-    "tithi": "अष्टमी",
+    "weekday": "",
+    "tithi": {
+      "Name": "Saptami",
+      "Paksha": "Krishna",
+      "Date": "22/30",
+      "Day": "7/15",
+      "Phase": "DarkHalf"
+    },
     "tithi_end": "०८:२५",
     "tithi_next": "नवमी",
-    "paksha": "शुक्ल",
-    "nakshatra": "पूर्वाषाढा",
+    "paksha": "",
+    "nakshatra": "Aridra - 1",
     "nakshatra_end": "१२:०५",
     "nakshatra_next": "उत्तराषाढा",
-    "yog": "अतिगंड",
+    "yog": {
+      "Name": "Variyan",
+      "Description": "Chief/best"
+    },
     "yog_time": "१५:१०",
     "yog_next": "सुकर्मा",
     "karan": "बव",
     "karan_end": "०८:२५",
     "karan_next": "बालव",
-    "sunrise": "०६:२९",
-    "sunset": "१८:१९",
-    "moonrise": "१२:५०",
-    "moonset": "२३:४५",
-    "rahukaal": "०९:२६ ते १०:५५",
-    "moon_rashi": "धनु",
-    "sun_rashi": "कन्या",
+    "sunrise": {
+      "StdTime": "06:28 03/10/2026 +05:30",
+      "Location": {
+        "Name": "Pune, Maharashtra, India",
+        "Longitude": 73.855,
+        "Latitude": 18.521
+      }
+    },
+    "sunset": {
+      "StdTime": "18:18 03/10/2026 +05:30",
+      "Location": {
+        "Name": "Pune, Maharashtra, India",
+        "Longitude": 73.855,
+        "Latitude": 18.521
+      }
+    },
+    "moonrise": {
+      "StdTime": "00:11 04/10/2026 +05:30",
+      "Location": {
+        "Name": "Pune, Maharashtra, India",
+        "Longitude": 73.855,
+        "Latitude": 18.521
+      }
+    },
+    "moonset": {
+      "StdTime": "12:52 03/10/2026 +05:30",
+      "Location": {
+        "Name": "Pune, Maharashtra, India",
+        "Longitude": 73.855,
+        "Latitude": 18.521
+      }
+    },
+    "rahukaal": {
+      "Start": {
+        "StdTime": "09:26 03/10/2026 +05:30",
+        "Location": {
+          "Name": "Pune, Maharashtra, India",
+          "Longitude": 73.855,
+          "Latitude": 18.521
+        }
+      },
+      "End": {
+        "StdTime": "10:54 03/10/2026 +05:30",
+        "Location": {
+          "Name": "Pune, Maharashtra, India",
+          "Longitude": 73.855,
+          "Latitude": 18.521
+        }
+      },
+      "DaysBetween": 0.06155381944444444
+    },
+    "moon_rashi": "",
+    "sun_rashi": "",
     "guru_rashi": "मिथुन",
     "ritu": "शरद",
     "ayan": "दक्षिणायन",
@@ -30,7 +85,7 @@
     "vikram_samvat": "२०८३",
     "kali_samvat": "५१२७",
     "solar_month": "आश्विन",
-    "din_vishesh": "दुर्गाष्टमी",
+    "din_vishesh": "",
     "agnivas": "पृथ्वीवर अग्निवास नाही",
     "agnivas_badge": "पृथ्वीवर नाही",
     "location": "Pune",
@@ -38,27 +93,27 @@
   },
   "2026-10-04": {
     "date": "04-10-2026",
-    "weekday": "रविवार",
-    "tithi": "नवमी",
+    "weekday": "",
+    "tithi": "",
     "tithi_end": "०९:४२",
     "tithi_next": "दशमी",
-    "paksha": "शुक्ल",
-    "nakshatra": "उत्तराषाढा",
+    "paksha": "",
+    "nakshatra": "",
     "nakshatra_end": "१४:१५",
     "nakshatra_next": "श्रवण",
-    "yog": "सुकर्मा",
+    "yog": "",
     "yog_time": "१६:२०",
     "yog_next": "धृती",
-    "karan": "कौलव",
+    "karan": "",
     "karan_end": "०९:४२",
     "karan_next": "तैतिल",
-    "sunrise": "०६:२९",
-    "sunset": "१८:१८",
-    "moonrise": "१३:४५",
-    "moonset": "००:३०",
-    "rahukaal": "१६:४९ ते १८:१८",
-    "moon_rashi": "मकर",
-    "sun_rashi": "कन्या",
+    "sunrise": "",
+    "sunset": "",
+    "moonrise": "",
+    "moonset": "",
+    "rahukaal": "",
+    "moon_rashi": "",
+    "sun_rashi": "",
     "guru_rashi": "मिथुन",
     "ritu": "शरद",
     "ayan": "दक्षिणायन",
@@ -67,7 +122,7 @@
     "vikram_samvat": "२०८३",
     "kali_samvat": "५१२७",
     "solar_month": "आश्विन",
-    "din_vishesh": "महानवमी / नवरात्र समाप्ती",
+    "din_vishesh": "",
     "agnivas": "पृथ्वीवर अग्निवास आहे",
     "agnivas_badge": "पृथ्वीवर आहे",
     "location": "Pune",
@@ -75,27 +130,27 @@
   },
   "2026-10-05": {
     "date": "05-10-2026",
-    "weekday": "सोमवार",
-    "tithi": "दशमी",
+    "weekday": "",
+    "tithi": "",
     "tithi_end": "११:०५",
     "tithi_next": "एकादशी",
-    "paksha": "शुक्ल",
-    "nakshatra": "श्रवण",
+    "paksha": "",
+    "nakshatra": "",
     "nakshatra_end": "१६:३०",
     "nakshatra_next": "धनिष्ठा",
-    "yog": "धृती",
+    "yog": "",
     "yog_time": "१७:०५",
     "yog_next": "शूल",
-    "karan": "गरज",
+    "karan": "",
     "karan_end": "११:०५",
     "karan_next": "वणिज",
-    "sunrise": "०६:२९",
-    "sunset": "१८:१७",
-    "moonrise": "१४:३२",
-    "moonset": "०१:२५",
-    "rahukaal": "०७:५८ ते ०९:२६",
-    "moon_rashi": "मकर",
-    "sun_rashi": "कन्या",
+    "sunrise": "",
+    "sunset": "",
+    "moonrise": "",
+    "moonset": "",
+    "rahukaal": "",
+    "moon_rashi": "",
+    "sun_rashi": "",
     "guru_rashi": "मिथुन",
     "ritu": "शरद",
     "ayan": "दक्षिणायन",
@@ -104,7 +159,7 @@
     "vikram_samvat": "२०८३",
     "kali_samvat": "५१२७",
     "solar_month": "आश्विन",
-    "din_vishesh": "विजयादशमी / दसरा",
+    "din_vishesh": "",
     "agnivas": "आकाशे अग्निवास (पृथ्वीवर नाही)",
     "agnivas_badge": "पृथ्वीवर नाही",
     "location": "Pune",
