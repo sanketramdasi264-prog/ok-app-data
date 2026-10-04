@@ -3,7 +3,7 @@ const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 
-// १. अपडेटेड मराठी डिक्शनरी (API च्या शब्दांनुसार)
+// १. अपडेटेड मराठी डिक्शनरी
 const marathiMapping = {
     tithi: {
         "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी",
@@ -50,18 +50,29 @@ function translate(category, englishWord) {
     return marathiMapping[category][englishWord] || englishWord;
 }
 
-// नवीन हेल्पर फंक्शन: API च्या Object मधून अचूक नाव काढण्यासाठी
+// नाव वेगळे काढण्यासाठी फंक्शन (उदा. "Aridra - 1" मधून "Aridra")
 function extractName(data) {
     if (!data) return "";
     let nameStr = "";
-    // जर डेटा Object असेल (उदा. {"Name": "Saptami"})
     if (typeof data === 'object' && data.Name) {
         nameStr = data.Name;
     } else if (typeof data === 'string') {
         nameStr = data;
     }
-    // जर नावात "Aridra - 1" असे आकडे असतील, तर ते काढून टाकण्यासाठी
     return nameStr.split(' - ')[0].trim();
+}
+
+// वेळेच्या Object मधून फक्त वेळ (उदा. "06:28") काढण्यासाठी फंक्शन
+function extractTime(timeData) {
+    if (!timeData) return "";
+    if (typeof timeData === 'object' && timeData.StdTime) {
+        // "06:28 03/10..." मधून फक्त "06:28" वेगळे करेल
+        return timeData.StdTime.split(' ')[0]; 
+    }
+    if (typeof timeData === 'string') {
+        return timeData.split(' ')[0];
+    }
+    return "";
 }
 
 async function fetchApiData(url) {
@@ -111,7 +122,6 @@ async function fetchVedAstroData(dateObj) {
         "weekday": translate("weekdays", pt.DayOfWeek || dateObj.toLocaleDateString('en-US', { weekday: 'long' })),
         
         "tithi": translate("tithi", extractName(pt.Tithi)), 
-        // पक्ष API मध्ये tithi.Paksha किंवा Phase मध्ये येत आहे 
         "paksha": translate("paksha", pt.Tithi?.Paksha || pt.Tithi?.Phase || ""),
         
         "nakshatra": translate("nakshatra", extractName(pt.Nakshatra)),
@@ -121,12 +131,13 @@ async function fetchVedAstroData(dateObj) {
         "moon_rashi": translate("rashi", getZodiacName(moonRashi)),
         "sun_rashi": translate("rashi", getZodiacName(sunRashi)),
         
-        "sunrise": pt.Sunrise || "",
-        "sunset": pt.Sunset || "",
+        // येथे extractTime() वापरले आहे
+        "sunrise": extractTime(pt.Sunrise),
+        "sunset": extractTime(pt.Sunset),
+        "moonrise": extractTime(moonRise?.MoonriseTime || moonRise),
+        "moonset": extractTime(moonSet?.MoonsetTime || moonSet),
         
-        "moonrise": typeof moonRise === 'string' ? moonRise : (moonRise?.MoonriseTime || ""),
-        "moonset": typeof moonSet === 'string' ? moonSet : (moonSet?.MoonsetTime || ""),
-        
+        // राहुकाळ स्ट्रिंग म्हणून सेव्ह करण्यासाठी
         "rahukaal": typeof rahuKala === 'string' ? rahuKala : (rahuKala?.RahuKala || ""),
         
         "din_vishesh": "", 
