@@ -49,7 +49,7 @@
     "yog": "परिघ",
     "yog_time": "१६:२०",
     "yog_next": "धृती",
-    "karan": "Taitula",
+    "karan": "तैतिल",
     "karan_end": "०९:४२",
     "karan_next": "तैतिल",
     "sunrise": "06:29",
@@ -71,7 +71,7 @@
     "agnivas": "पृथ्वीवर अग्निवास आहे",
     "agnivas_badge": "पृथ्वीवर आहे",
     "location": "Pune",
-    "is_manual_override": false
+    "is_manual_override": true
   },
   "2026-10-05": {
     "date": "05-10-2026",
