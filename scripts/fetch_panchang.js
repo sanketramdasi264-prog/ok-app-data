@@ -115,8 +115,7 @@ async function fetchVedAstroData(dateObj) {
     console.log(`Fetching Live Data for ${formattedDate}...`);
 
     const baseUrl = `https://api.vedastro.org/api/Calculate`;
-    const locTimeStr = `Location/Pune/Time/07:00/${dd}/${mm}/${yyyy}/+05:30`;
-
+const locTimeStr = Location/Mumbai/Time/07:00/${dd}/${mm}/${yyyy}/+05:30;
     const panchangaTable = await fetchApiData(`${baseUrl}/PanchangaTable/${locTimeStr}`);
     console.log("PanchangaTable fetched. Waiting 15 seconds...");
     await delay(15000);
