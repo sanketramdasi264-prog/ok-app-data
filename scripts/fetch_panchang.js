@@ -10,8 +10,8 @@ const marathiMapping = {
     tithi: { "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी", "Saptami": "सप्तमी", "Ashtami": "अष्टमी", "Navami": "नवमी", "Dashami": "दशमी", "Ekadashi": "एकादशी", "Dvadashi": "द्वादशी", "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी", "Purnima": "पौर्णिमा", "Amavasya": "अमावस्या" },
     paksha: { "Shukla": "शुक्ल", "Krishna": "कृष्ण", "Bright": "शुक्ल", "Dark": "कृष्ण" },
     nakshatra: { "Ashvini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका", "Rohini": "रोहिणी", "Mrigashirsha": "मृगशीर्ष", "Ardra": "आर्द्रा", "Aridra": "आर्द्रा", "Punarvasu": "पुनर्वसू", "Pushya": "पुष्य", "Ashlesha": "आश्लेषा", "Magha": "मघा", "Purva Phalguni": "पूर्वा फाल्गुनी", "Uttara Phalguni": "उत्तरा फाल्गुनी", "Hasta": "हस्त", "Chitra": "चित्रा", "Svati": "स्वाती", "Vishakha": "विशाखा", "Anuradha": "अनुराधा", "Jyeshtha": "ज्येष्ठा", "Mula": "मूळ", "Purva Ashadha": "पूर्वाषाढा", "Uttara Ashadha": "उत्तराषाढा", "Uttarasadha": "उत्तराषाढा", "Shravana": "श्रवण", "Dhanishta": "धनिष्ठा", "Shatabhisha": "शततारका", "Purva Bhadrapada": "पूर्वा भाद्रपदा", "Uttara Bhadrapada": "उत्तरा भाद्रपदा", "Revati": "रेवती" },
-    yog: { "Sukarma": "सुकर्मा", "Dhriti": "धृती", "Shula": "शूल", "Ganda": "गंड", "Vriddhi": "वृद्धी", "Dhruva": "ध्रुव", "Vyaghata": "व्याघात", "Harshana": "हर्षण", "Vajra": "वज्र", "Siddhi": "सिद्धी", "Vyatipata": "व्यतीपात", "Variyana": "वरीयान", "Variyan": "वरीयान", "Parigha": "परिघ", "Shiva": "शिव", "Siddha": "सिद्ध", "Sadhya": "साध्य", "Shubha": "शुभ", "Shukla": "शुक्ल", "Brahma": "ब्रह्म", "Indra": "इंद्र", "Vaidhriti": "वैधृती", "Vishkambha": "विष्कंभ", "Priti": "प्रीती", "Ayushmana": "आयुष्मान", "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगंड" },
-    karan: { "Bava": "बव", "Bhav": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल", "Tetil": "तैतिल", "Gara": "गरज", "Gar": "गरज", "Vanija": "वणिज", "Vishti": "भद्रा", "Shakuni": "शकुनी", "Chatushpada": "चतुष्पाद", "Naga": "नाग", "Kinstughna": "किंस्तुघ्न" },
+    yog: { "Sukarma": "सुकर्मा", "Dhriti": "धृती", "Shula": "शूल", "Ganda": "गंड", "Vriddhi": "वृद्धी", "Dhruva": "ध्रुव", "Vyaghata": "व्याघात", "Harshana": "हर्षण", "Vajra": "वज्र", "Siddhi": "सिद्धी", "Vyatipata": "व्यतीपात", "Variyana": "वरीयान", "Variyan": "वरीयान", "Parigha": "परिघ", "Shiva": "शिव", "Siva": "शिव", "Siddha": "सिद्ध", "Sadhya": "साध्य", "Shubha": "शुभ", "Shukla": "शुक्ल", "Brahma": "ब्रह्म", "Indra": "इंद्र", "Vaidhriti": "वैधृती", "Vishkambha": "विष्कंभ", "Priti": "प्रीती", "Ayushmana": "आयुष्मान", "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगंड" },
+    karan: { "Bava": "बव", "Bhav": "बव", "Balava": "बालव", "Kaulava": "कौलव", "Taitila": "तैतिल", "Tetil": "तैतिल", "Gara": "गरज", "Gar": "गरज", "Vanija": "वणिज", "Vanij": "वणिज", "Vishti": "भद्रा", "Shakuni": "शकुनी", "Chatushpada": "चतुष्पाद", "Naga": "नाग", "Kinstughna": "किंस्तुघ्न" },
     rashi: { "Aries": "मेष", "Taurus": "वृषभ", "Gemini": "मिथुन", "Cancer": "कर्क", "Leo": "सिंह", "Virgo": "कन्या", "Libra": "तूळ", "Scorpio": "वृश्चिक", "Sagittarius": "धनु", "Capricorn": "मकर", "Aquarius": "कुंभ", "Pisces": "मीन" },
     weekdays: { "Sunday": "रविवार", "Monday": "सोमवार", "Tuesday": "मंगळवार", "Wednesday": "बुधवार", "Thursday": "गुरुवार", "Friday": "शुक्रवार", "Saturday": "शनिवार" },
     lunarMonth: { "Chaitra": "चैत्र", "Vaishakha": "वैशाख", "Jyeshtha": "ज्येष्ठ", "Ashadha": "आषाढ", "Shravana": "श्रावण", "Bhadrapada": "भाद्रपद", "Bhaadrapada": "भाद्रपद", "Ashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक", "Margashirsha": "मार्गशीर्ष", "Pausha": "पौष", "Magha": "माघ", "Phalguna": "फाल्गुन" }
@@ -23,6 +23,7 @@ const yogArr = ["विष्कंभ", "प्रीती", "आयुष्�
 const karanArr = ["बव", "बालव", "कौलव", "तैतिल", "गरज", "वणिज", "भद्रा", "शकुनी", "चतुष्पाद", "नाग", "किंस्तुघ्न"];
 
 function getNextTithi(current, paksha) {
+    if (!current) return "";
     const t = ["प्रतिपदा", "द्वितीया", "तृतीया", "चतुर्थी", "पंचमी", "षष्ठी", "सप्तमी", "अष्टमी", "नवमी", "दशमी", "एकादशी", "द्वादशी", "त्रयोदशी", "चतुर्दशी"];
     let idx = t.indexOf(current);
     if (idx !== -1) {
@@ -34,6 +35,7 @@ function getNextTithi(current, paksha) {
 }
 
 function getNextItem(current, arr) {
+    if (!current) return "";
     let idx = arr.indexOf(current);
     return (idx !== -1) ? arr[(idx + 1) % arr.length] : "";
 }
@@ -54,6 +56,14 @@ function extractVedAstroTime(timeData) {
     if (!timeData) return "";
     if (typeof timeData === 'object' && timeData.StdTime) return timeData.StdTime.split(' ')[0]; 
     if (typeof timeData === 'string') return timeData.split(' ')[0];
+    return "";
+}
+
+function extractVedAstroRashi(data) {
+    if (!data) return "";
+    if (typeof data === 'string') return data;
+    if (data.ZodiacSign && data.ZodiacSign.Name) return data.ZodiacSign.Name;
+    if (data.Name) return data.Name;
     return "";
 }
 
@@ -87,7 +97,7 @@ async function fetchHybridData(dateObj) {
     const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
     
-    let moonRiseData = null, moonSetData = null;
+    let moonRiseData = null, moonSetData = null, guruRashiData = null;
     try {
         const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
         if (mrRes.ok) moonRiseData = (await mrRes.json()).Payload;
@@ -95,6 +105,11 @@ async function fetchHybridData(dateObj) {
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
+        await delay(15000);
+
+        // गुरु राशी अचूक मिळवण्यासाठी नवीन कॉल 
+        const grRes = await fetch(`${vedAstroBaseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Jupiter/${locTimeStr}/divisionalChart/D1`);
+        if (grRes.ok) guruRashiData = (await grRes.json()).Payload;
         await delay(15000);
     } catch (e) { console.error("VedAstro Error:", e); }
 
@@ -114,26 +129,27 @@ async function fetchHybridData(dateObj) {
         
         "tithi": currentTithi,
         "tithi_end": formatTime(freeAstroData.tithi?.ends_at),
-        "tithi_next": getNextTithi(currentTithi, currentPaksha), // पुढची तिथी
+        "tithi_next": getNextTithi(currentTithi, currentPaksha),
         "paksha": currentPaksha,
         
         "nakshatra": currentNakshatra,
         "nakshatra_end": formatTime(freeAstroData.nakshatra?.ends_at),
-        "nakshatra_next": getNextItem(currentNakshatra, nakshatraArr), // पुढचे नक्षत्र
+        "nakshatra_next": getNextItem(currentNakshatra, nakshatraArr),
         
         "yog": currentYog,
         "yog_time": formatTime(freeAstroData.yoga?.ends_at),
-        "yog_next": getNextItem(currentYog, yogArr), // पुढचा योग
+        "yog_next": getNextItem(currentYog, yogArr),
         
         "karan": currentKaran,
         "karan_end": formatTime(karanObj?.ends_at),
-        "karan_next": getNextItem(currentKaran, karanArr), // पुढचे करण
+        "karan_next": getNextItem(currentKaran, karanArr),
         
+        // राशींचा अचूक डेटा
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
-        "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
+        "guru_rashi": translate("rashi", extractVedAstroRashi(guruRashiData)), // VedAstro कडून 100% अचूक
         
-        // संवत्सर, अयन आणि ऋतू पुन्हा जोडले
+        "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
         "samvatsar": "पराभव",
         "shaka_samvat": "१९४८",
         "vikram_samvat": "२०८३",
