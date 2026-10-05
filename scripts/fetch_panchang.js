@@ -21,6 +21,38 @@ const nakshatraArr = ["अश्विनी", "भरणी", "कृत्त�
 const yogArr = ["विष्कंभ", "प्रीती", "आयुष्मान", "सौभाग्य", "शोभन", "अतिगंड", "सुकर्मा", "धृती", "शूल", "गंड", "वृद्धी", "ध्रुव", "व्याघात", "हर्षण", "वज्र", "सिद्धी", "व्यतीपात", "वरीयान", "परिघ", "शिव", "सिद्ध", "साध्य", "शुभ", "शुक्ल", "ब्रह्म", "इंद्र", "वैधृती"];
 const karanArr = ["बव", "बालव", "कौलव", "तैतिल", "गरज", "वणिज", "भद्रा", "शकुनी", "चतुष्पाद", "नाग", "किंस्तुघ्न"];
 
+// --- 2026 to 2036 Smart Guru Rashi Auto-Calculator ---
+function getSmartGuruRashi(dateObj) {
+    const time = dateObj.getTime();
+    
+    if (time < new Date('2026-10-31').getTime()) return "कर्क";
+    if (time < new Date('2027-01-25').getTime()) return "सिंह";
+    if (time < new Date('2027-06-26').getTime()) return "कर्क";
+    if (time < new Date('2027-11-26').getTime()) return "सिंह";
+    if (time < new Date('2028-02-28').getTime()) return "कन्या";
+    if (time < new Date('2028-07-24').getTime()) return "सिंह";
+    if (time < new Date('2028-12-26').getTime()) return "कन्या";
+    if (time < new Date('2029-03-29').getTime()) return "तूळ";
+    if (time < new Date('2029-08-25').getTime()) return "कन्या";
+    if (time < new Date('2030-01-25').getTime()) return "तूळ";
+    if (time < new Date('2030-05-01').getTime()) return "वृश्चिक";
+    if (time < new Date('2030-09-23').getTime()) return "तूळ";
+    if (time < new Date('2031-02-17').getTime()) return "वृश्चिक";
+    if (time < new Date('2031-06-14').getTime()) return "धनु";
+    if (time < new Date('2031-10-15').getTime()) return "वृश्चिक";
+    if (time < new Date('2032-03-05').getTime()) return "धनु";
+    if (time < new Date('2032-08-12').getTime()) return "मकर";
+    if (time < new Date('2032-10-23').getTime()) return "धनु";
+    if (time < new Date('2033-03-18').getTime()) return "मकर";
+    if (time < new Date('2034-03-28').getTime()) return "कुंभ";
+    if (time < new Date('2035-04-06').getTime()) return "मीन";
+    if (time < new Date('2036-04-15').getTime()) return "मेष";
+    if (time < new Date('2036-09-10').getTime()) return "वृषभ";
+    if (time < new Date('2036-11-17').getTime()) return "मिथुन";
+    
+    return "वृषभ"; // Post Nov 2036 fallback
+}
+
 function getNextTithi(current, paksha) {
     if (!current) return "";
     const t = ["प्रतिपदा", "द्वितीया", "तृतीया", "चतुर्थी", "पंचमी", "षष्ठी", "सप्तमी", "अष्टमी", "नवमी", "दशमी", "एकादशी", "द्वादशी", "त्रयोदशी", "चतुर्दशी"];
@@ -96,7 +128,6 @@ async function fetchHybridData(dateObj) {
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
-        // गुरु राशीचा API कॉल इथून काढून टाकला आहे, कारण आपण तो खाली थेट सेट करत आहोत.
     } catch (e) { console.error("VedAstro Error:", e); }
 
     if (!freeAstroData) return null;
@@ -132,7 +163,7 @@ async function fetchHybridData(dateObj) {
         
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
-        "guru_rashi": "कर्क", // दाते पंचांगनुसार मॅन्युअली फिक्स केले
+        "guru_rashi": getSmartGuruRashi(dateObj), // Automatic 10-year calculation
         
         "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
         "samvatsar": "पराभव",
