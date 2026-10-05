@@ -58,25 +58,6 @@ function extractVedAstroTime(timeData) {
     return "";
 }
 
-function extractVedAstroRashi(data) {
-    if (!data) return "";
-    if (typeof data === 'string') return data;
-    
-    // VedAstro च्या नवीन सोप्या Endpoint नुसार राशीचे नाव काढण्यासाठी
-    if (data.Name) return data.Name;
-    if (data.ZodiacSign && data.ZodiacSign.Name) return data.ZodiacSign.Name;
-    if (data.PlanetZodiacSignInDivisionalChart && data.PlanetZodiacSignInDivisionalChart.ZodiacSign) {
-        return data.PlanetZodiacSignInDivisionalChart.ZodiacSign.Name;
-    }
-    
-    // जर वरीलपैकी काहीच सापडले नाही, तर डीबगिंगसाठी तो डेटा तसाच परत पाठवा
-    try {
-        return JSON.stringify(data);
-    } catch(e) {
-        return "";
-    }
-}
-
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchHybridData(dateObj) {
@@ -107,7 +88,7 @@ async function fetchHybridData(dateObj) {
     const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
     
-    let moonRiseData = null, moonSetData = null, guruRashiData = null;
+    let moonRiseData = null, moonSetData = null;
     try {
         const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
         if (mrRes.ok) moonRiseData = (await mrRes.json()).Payload;
@@ -115,18 +96,7 @@ async function fetchHybridData(dateObj) {
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
-        await delay(15000);
-
-        // गुरु राशी अचूक मिळवण्यासाठी नवीन सोपी लिंक (Endpoint)
-        const grRes = await fetch(`${vedAstroBaseUrl}/PlanetZodiacSign/PlanetName/Jupiter/${locTimeStr}`);
-        if (grRes.ok) {
-            const grJson = await grRes.json();
-            guruRashiData = grJson.Payload;
-            console.log(`Guru Rashi API Response for ${formattedDate}:`, JSON.stringify(guruRashiData));
-        } else {
-            console.error(`Failed Guru Rashi API:`, grRes.statusText);
-        }
-        await delay(15000);
+        // गुरु राशीचा API कॉल इथून काढून टाकला आहे, कारण आपण तो खाली थेट सेट करत आहोत.
     } catch (e) { console.error("VedAstro Error:", e); }
 
     if (!freeAstroData) return null;
@@ -138,9 +108,6 @@ async function fetchHybridData(dateObj) {
     const currentNakshatra = translate("nakshatra", freeAstroData.nakshatra?.name);
     const currentYog = translate("yog", freeAstroData.yoga?.name);
     const currentKaran = translate("karan", karanObj?.name);
-
-    // गुरु राशीचे भाषांतर
-    let finalGuruRashi = translate("rashi", extractVedAstroRashi(guruRashiData));
 
     const fetchedData = {
         "date": formattedDate,
@@ -165,7 +132,7 @@ async function fetchHybridData(dateObj) {
         
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
-        "guru_rashi": finalGuruRashi, // आता १००% अचूक येईल
+        "guru_rashi": "कर्क", // दाते पंचांगनुसार मॅन्युअली फिक्स केले
         
         "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
         "samvatsar": "पराभव",
