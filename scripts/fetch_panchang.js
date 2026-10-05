@@ -17,7 +17,6 @@ const marathiMapping = {
     lunarMonth: { "Chaitra": "चैत्र", "Vaishakha": "वैशाख", "Jyeshtha": "ज्येष्ठ", "Ashadha": "आषाढ", "Shravana": "श्रावण", "Bhadrapada": "भाद्रपद", "Bhaadrapada": "भाद्रपद", "Ashvina": "आश्विन", "Ashwin": "आश्विन", "Kartika": "कार्तिक", "Margashirsha": "मार्गशीर्ष", "Pausha": "पौष", "Magha": "माघ", "Phalguna": "फाल्गुन" }
 };
 
-// --- Next Item Calculators ---
 const nakshatraArr = ["अश्विनी", "भरणी", "कृत्तिका", "रोहिणी", "मृगशीर्ष", "आर्द्रा", "पुनर्वसू", "पुष्य", "आश्लेषा", "मघा", "पूर्वा फाल्गुनी", "उत्तरा फाल्गुनी", "हस्त", "चित्रा", "स्वाती", "विशाखा", "अनुराधा", "ज्येष्ठा", "मूळ", "पूर्वाषाढा", "उत्तराषाढा", "श्रवण", "धनिष्ठा", "शततारका", "पूर्वा भाद्रपदा", "उत्तरा भाद्रपदा", "रेवती"];
 const yogArr = ["विष्कंभ", "प्रीती", "आयुष्मान", "सौभाग्य", "शोभन", "अतिगंड", "सुकर्मा", "धृती", "शूल", "गंड", "वृद्धी", "ध्रुव", "व्याघात", "हर्षण", "वज्र", "सिद्धी", "व्यतीपात", "वरीयान", "परिघ", "शिव", "सिद्ध", "साध्य", "शुभ", "शुक्ल", "ब्रह्म", "इंद्र", "वैधृती"];
 const karanArr = ["बव", "बालव", "कौलव", "तैतिल", "गरज", "वणिज", "भद्रा", "शकुनी", "चतुष्पाद", "नाग", "किंस्तुघ्न"];
@@ -63,14 +62,19 @@ function extractVedAstroRashi(data) {
     if (!data) return "";
     if (typeof data === 'string') return data;
     
-    // VedAstro च्या अचूक फॉरमॅटनुसार राशीचे नाव काढण्यासाठी
+    // VedAstro च्या नवीन सोप्या Endpoint नुसार राशीचे नाव काढण्यासाठी
+    if (data.Name) return data.Name;
+    if (data.ZodiacSign && data.ZodiacSign.Name) return data.ZodiacSign.Name;
     if (data.PlanetZodiacSignInDivisionalChart && data.PlanetZodiacSignInDivisionalChart.ZodiacSign) {
         return data.PlanetZodiacSignInDivisionalChart.ZodiacSign.Name;
     }
     
-    if (data.ZodiacSign && data.ZodiacSign.Name) return data.ZodiacSign.Name;
-    if (data.Name) return data.Name;
-    return "";
+    // जर वरीलपैकी काहीच सापडले नाही, तर डीबगिंगसाठी तो डेटा तसाच परत पाठवा
+    try {
+        return JSON.stringify(data);
+    } catch(e) {
+        return "";
+    }
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -113,9 +117,15 @@ async function fetchHybridData(dateObj) {
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
         await delay(15000);
 
-        // गुरु राशी अचूक मिळवण्यासाठी नवीन कॉल 
-        const grRes = await fetch(`${vedAstroBaseUrl}/GetPlanetZodiacSignInDivisionalChart/PlanetName/Jupiter/${locTimeStr}/divisionalChart/D1`);
-        if (grRes.ok) guruRashiData = (await grRes.json()).Payload;
+        // गुरु राशी अचूक मिळवण्यासाठी नवीन सोपी लिंक (Endpoint)
+        const grRes = await fetch(`${vedAstroBaseUrl}/PlanetZodiacSign/PlanetName/Jupiter/${locTimeStr}`);
+        if (grRes.ok) {
+            const grJson = await grRes.json();
+            guruRashiData = grJson.Payload;
+            console.log(`Guru Rashi API Response for ${formattedDate}:`, JSON.stringify(guruRashiData));
+        } else {
+            console.error(`Failed Guru Rashi API:`, grRes.statusText);
+        }
         await delay(15000);
     } catch (e) { console.error("VedAstro Error:", e); }
 
@@ -128,6 +138,9 @@ async function fetchHybridData(dateObj) {
     const currentNakshatra = translate("nakshatra", freeAstroData.nakshatra?.name);
     const currentYog = translate("yog", freeAstroData.yoga?.name);
     const currentKaran = translate("karan", karanObj?.name);
+
+    // गुरु राशीचे भाषांतर
+    let finalGuruRashi = translate("rashi", extractVedAstroRashi(guruRashiData));
 
     const fetchedData = {
         "date": formattedDate,
@@ -150,10 +163,9 @@ async function fetchHybridData(dateObj) {
         "karan_end": formatTime(karanObj?.ends_at),
         "karan_next": getNextItem(currentKaran, karanArr),
         
-        // राशींचा अचूक डेटा
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
-        "guru_rashi": translate("rashi", extractVedAstroRashi(guruRashiData)), // VedAstro कडून 100% अचूक
+        "guru_rashi": finalGuruRashi, // आता १००% अचूक येईल
         
         "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
         "samvatsar": "पराभव",
