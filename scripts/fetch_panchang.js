@@ -62,6 +62,12 @@ function extractVedAstroTime(timeData) {
 function extractVedAstroRashi(data) {
     if (!data) return "";
     if (typeof data === 'string') return data;
+    
+    // VedAstro च्या अचूक फॉरमॅटनुसार राशीचे नाव काढण्यासाठी
+    if (data.PlanetZodiacSignInDivisionalChart && data.PlanetZodiacSignInDivisionalChart.ZodiacSign) {
+        return data.PlanetZodiacSignInDivisionalChart.ZodiacSign.Name;
+    }
+    
     if (data.ZodiacSign && data.ZodiacSign.Name) return data.ZodiacSign.Name;
     if (data.Name) return data.Name;
     return "";
