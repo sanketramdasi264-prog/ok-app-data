@@ -31,7 +31,7 @@
     "vikram_samvat": "२०८३",
     "ayan": "दक्षिणायन",
     "ritu": "शरद",
-    "guru_rashi": "Calculator method not found!"
+    "guru_rashi": "कर्क"
   },
   "2026-10-05": {
     "date": "05-10-2026",
@@ -65,7 +65,7 @@
     "vikram_samvat": "२०८३",
     "ayan": "दक्षिणायन",
     "ritu": "शरद",
-    "guru_rashi": "Calculator method not found!"
+    "guru_rashi": "कर्क"
   },
   "2026-10-06": {
     "date": "06-10-2026",
@@ -85,7 +85,7 @@
     "karan_next": "बालव",
     "moon_rashi": "कर्क",
     "sun_rashi": "कन्या",
-    "guru_rashi": "Calculator method not found!",
+    "guru_rashi": "कर्क",
     "lunar_month": "भाद्रपद",
     "samvatsar": "पराभव",
     "shaka_samvat": "१९४८",
@@ -95,7 +95,7 @@
     "sunrise": "06:30",
     "sunset": "18:23",
     "moonrise": "02:21",
-    "moonset": "15:27",
+    "moonset": "Free",
     "rahukaal": "15:24 ते 16:53",
     "din_vishesh": "",
     "location": "Mumbai",
