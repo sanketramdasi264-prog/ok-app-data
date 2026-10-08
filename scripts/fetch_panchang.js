@@ -21,7 +21,6 @@ const nakshatraArr = ["अश्विनी", "भरणी", "कृत्त�
 const yogArr = ["विष्कंभ", "प्रीती", "आयुष्मान", "सौभाग्य", "शोभन", "अतिगंड", "सुकर्मा", "धृती", "शूल", "गंड", "वृद्धी", "ध्रुव", "व्याघात", "हर्षण", "वज्र", "सिद्धी", "व्यतीपात", "वरीयान", "परिघ", "शिव", "सिद्ध", "साध्य", "शुभ", "शुक्ल", "ब्रह्म", "इंद्र", "वैधृती"];
 const karanArr = ["बव", "बालव", "कौलव", "तैतिल", "गरज", "वणिज", "भद्रा", "शकुनी", "चतुष्पाद", "नाग", "किंस्तुघ्न"];
 
-// --- 2026 to 2036 Smart Guru Rashi Auto-Calculator ---
 function getSmartGuruRashi(dateObj) {
     const time = dateObj.getTime();
     if (time < new Date('2026-10-31').getTime()) return "कर्क";
@@ -33,22 +32,7 @@ function getSmartGuruRashi(dateObj) {
     if (time < new Date('2028-12-26').getTime()) return "कन्या";
     if (time < new Date('2029-03-29').getTime()) return "तूळ";
     if (time < new Date('2029-08-25').getTime()) return "कन्या";
-    if (time < new Date('2030-01-25').getTime()) return "तूळ";
-    if (time < new Date('2030-05-01').getTime()) return "वृश्चिक";
-    if (time < new Date('2030-09-23').getTime()) return "तूळ";
-    if (time < new Date('2031-02-17').getTime()) return "वृश्चिक";
-    if (time < new Date('2031-06-14').getTime()) return "धनु";
-    if (time < new Date('2031-10-15').getTime()) return "वृश्चिक";
-    if (time < new Date('2032-03-05').getTime()) return "धनु";
-    if (time < new Date('2032-08-12').getTime()) return "मकर";
-    if (time < new Date('2032-10-23').getTime()) return "धनु";
-    if (time < new Date('2033-03-18').getTime()) return "मकर";
-    if (time < new Date('2034-03-28').getTime()) return "कुंभ";
-    if (time < new Date('2035-04-06').getTime()) return "मीन";
-    if (time < new Date('2036-04-15').getTime()) return "मेष";
-    if (time < new Date('2036-09-10').getTime()) return "वृषभ";
-    if (time < new Date('2036-11-17').getTime()) return "मिथुन";
-    return "वृषभ";
+    return "तूळ"; 
 }
 
 function getNextTithi(current, paksha) {
@@ -84,6 +68,20 @@ function formatTime(timeStr) {
     return timeStr;
 }
 
+function format24Hour(timeStr) {
+    if (!timeStr) return "";
+    const parts = timeStr.split(':');
+    if (parts.length >= 2) {
+        let h = parseInt(parts[0], 10);
+        const m = parts[1];
+        if (h >= 0 && h <= 7) {
+            h = h + 24;
+        }
+        return `${String(h).padStart(2, '0')}:${m}`;
+    }
+    return timeStr;
+}
+
 function extractVedAstroTime(timeData) {
     if (!timeData) return "";
     if (typeof timeData === 'object' && timeData.StdTime) return timeData.StdTime.split(' ')[0]; 
@@ -116,7 +114,7 @@ async function fetchHybridData(dateObj) {
         if (response.ok) freeAstroData = await response.json();
     } catch (e) { console.error("FreeAstro Error:", e); }
 
-    await delay(2000);
+    await delay(1500);
 
     const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
@@ -125,14 +123,14 @@ async function fetchHybridData(dateObj) {
     try {
         const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
         if (mrRes.ok) moonRiseData = (await mrRes.json()).Payload;
-        await delay(5000); // 15 seconds warun 5 seconds kela ahe mhanje script fast run hoil
+        await delay(3000); 
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
     } catch (e) { console.error("VedAstro Error:", e); }
 
     if (!freeAstroData) {
-        console.log(`Failed to fetch data for ${formattedDate}. API returned null.`);
+        console.log(`Failed to fetch data for ${formattedDate}.`);
         return null;
     }
 
@@ -147,41 +145,33 @@ async function fetchHybridData(dateObj) {
     const fetchedData = {
         "date": formattedDate,
         "weekday": translate("weekdays", freeAstroData.weekday?.name),
-        
         "tithi": currentTithi,
         "tithi_end": formatTime(freeAstroData.tithi?.ends_at),
         "tithi_next": getNextTithi(currentTithi, currentPaksha),
         "paksha": currentPaksha,
-        
         "nakshatra": currentNakshatra,
         "nakshatra_end": formatTime(freeAstroData.nakshatra?.ends_at),
         "nakshatra_next": getNextItem(currentNakshatra, nakshatraArr),
-        
         "yog": currentYog,
         "yog_time": formatTime(freeAstroData.yoga?.ends_at),
         "yog_next": getNextItem(currentYog, yogArr),
-        
         "karan": currentKaran,
         "karan_end": formatTime(karanObj?.ends_at),
         "karan_next": getNextItem(currentKaran, karanArr),
-        
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
         "guru_rashi": getSmartGuruRashi(dateObj), 
-        
         "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
         "samvatsar": "पराभव",
         "shaka_samvat": "१९४८",
         "vikram_samvat": "२०८३",
         "ayan": "दक्षिणायन",
         "ritu": "शरद",
-        
         "sunrise": formatTime(freeAstroData.sunrise),
         "sunset": formatTime(freeAstroData.sunset),
-        "moonrise": extractVedAstroTime(moonRiseData?.MoonriseTime || moonRiseData), 
-        "moonset": extractVedAstroTime(moonSetData?.MoonsetTime || moonSetData),
+        "moonrise": format24Hour(extractVedAstroTime(moonRiseData?.MoonriseTime || moonRiseData)), 
+        "moonset": format24Hour(extractVedAstroTime(moonSetData?.MoonsetTime || moonSetData)),
         "rahukaal": `${formatTime(freeAstroData.rahu_kalam?.start)} ते ${formatTime(freeAstroData.rahu_kalam?.end)}`,
-        
         "din_vishesh": "", 
         "location": "Mumbai",
         "is_manual_override": false
@@ -195,11 +185,14 @@ async function updatePanchang() {
     if (fs.existsSync(PANCHANG_FILE)) existingData = JSON.parse(fs.readFileSync(PANCHANG_FILE, 'utf8'));
 
     const today = new Date();
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-
-    const formatDateKey = (date) => date.toISOString().split('T')[0];
-    const datesToKeep = [formatDateKey(yesterday), formatDateKey(today), formatDateKey(tomorrow)];
+    
+    // १५ दिवस मागचे आणि १५ दिवस पुढचे (एकूण ३१ दिवस)
+    const datesToKeep = [];
+    for (let i = -15; i <= 15; i++) {
+        let d = new Date(today);
+        d.setDate(today.getDate() + i);
+        datesToKeep.push(d.toISOString().split('T')[0]);
+    }
     
     let newData = {};
 
@@ -212,14 +205,13 @@ async function updatePanchang() {
             if (apiResult) {
                 newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
             } else if (existingData[dateKey]) {
-                // API fail zala tar juna data theva (UI crash honar nahi)
                 newData[dateKey] = existingData[dateKey];
             }
         }
     }
 
     fs.writeFileSync(PANCHANG_FILE, JSON.stringify(newData, null, 2), 'utf8');
-    console.log("पंचांग डेटा अपडेट पूर्ण झाले!");
+    console.log("३१ दिवसांचा पंचांग डेटा (१५ मागचे, १५ पुढचे) अपडेट पूर्ण झाला!");
 }
 
 updatePanchang();
