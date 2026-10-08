@@ -7,7 +7,7 @@ const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
 const API_KEY = "841fcb1c925b06c53058eed60882c15e797be1a30486a080a40c6a09a2f2e65d";
 
 const marathiMapping = {
-    tithi: { "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी", "Saptami": "सप्तमी", "Ashtami": "अष्टमी", "Navami": "नवमी", "Dashami": "दशमी", "Ekadashi": "एकादशी", "Dvadashi": "द्वादशी", "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी", "Purnima": "पौर्णिमा", "Amavasya": "अमावस्या" },
+    tithi: { "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी", "Saptami": "सप्तमी", "Ashtami": "अष्टमी", "Navami": "नवमी", "Dashami": "दशमी", "Ekadashi": "एकादशी", "Dvadashi": "द्वादशी", "Dwadashi": "द्वादशी", "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी", "Purnima": "पौर्णिमा", "Amavasya": "अमावस्या" },
     paksha: { "Shukla": "शुक्ल", "Krishna": "कृष्ण", "Bright": "शुक्ल", "Dark": "कृष्ण" },
     nakshatra: { "Ashvini": "अश्विनी", "Bharani": "भरणी", "Krittika": "कृत्तिका", "Rohini": "रोहिणी", "Mrigashirsha": "मृगशीर्ष", "Ardra": "आर्द्रा", "Aridra": "आर्द्रा", "Punarvasu": "पुनर्वसू", "Pushya": "पुष्य", "Ashlesha": "आश्लेषा", "Magha": "मघा", "Purva Phalguni": "पूर्वा फाल्गुनी", "Uttara Phalguni": "उत्तरा फाल्गुनी", "Hasta": "हस्त", "Chitra": "चित्रा", "Svati": "स्वाती", "Vishakha": "विशाखा", "Anuradha": "अनुराधा", "Jyeshtha": "ज्येष्ठा", "Mula": "मूळ", "Purva Ashadha": "पूर्वाषाढा", "Uttara Ashadha": "उत्तराषाढा", "Uttarasadha": "उत्तराषाढा", "Shravana": "श्रवण", "Dhanishta": "धनिष्ठा", "Shatabhisha": "शततारका", "Purva Bhadrapada": "पूर्वा भाद्रपदा", "Uttara Bhadrapada": "उत्तरा भाद्रपदा", "Revati": "रेवती" },
     yog: { "Sukarma": "सुकर्मा", "Dhriti": "धृती", "Shula": "शूल", "Ganda": "गंड", "Vriddhi": "वृद्धी", "Dhruva": "ध्रुव", "Vyaghata": "व्याघात", "Harshana": "हर्षण", "Vajra": "वज्र", "Siddhi": "सिद्धी", "Vyatipata": "व्यतीपात", "Variyana": "वरीयान", "Variyan": "वरीयान", "Parigha": "परिघ", "Shiva": "शिव", "Siva": "शिव", "Siddha": "सिद्ध", "Sadhya": "साध्य", "Shubha": "शुभ", "Shukla": "शुक्ल", "Brahma": "ब्रह्म", "Indra": "इंद्र", "Vaidhriti": "वैधृती", "Vishkambha": "विष्कंभ", "Priti": "प्रीती", "Ayushmana": "आयुष्मान", "Saubhagya": "सौभाग्य", "Shobhana": "शोभन", "Atiganda": "अतिगंड" },
@@ -24,7 +24,6 @@ const karanArr = ["बव", "बालव", "कौलव", "तैतिल", "
 // --- 2026 to 2036 Smart Guru Rashi Auto-Calculator ---
 function getSmartGuruRashi(dateObj) {
     const time = dateObj.getTime();
-    
     if (time < new Date('2026-10-31').getTime()) return "कर्क";
     if (time < new Date('2027-01-25').getTime()) return "सिंह";
     if (time < new Date('2027-06-26').getTime()) return "कर्क";
@@ -49,31 +48,33 @@ function getSmartGuruRashi(dateObj) {
     if (time < new Date('2036-04-15').getTime()) return "मेष";
     if (time < new Date('2036-09-10').getTime()) return "वृषभ";
     if (time < new Date('2036-11-17').getTime()) return "मिथुन";
-    
-    return "वृषभ"; // Post Nov 2036 fallback
+    return "वृषभ";
 }
 
 function getNextTithi(current, paksha) {
     if (!current) return "";
+    let cleanCurrent = current.trim();
     const t = ["प्रतिपदा", "द्वितीया", "तृतीया", "चतुर्थी", "पंचमी", "षष्ठी", "सप्तमी", "अष्टमी", "नवमी", "दशमी", "एकादशी", "द्वादशी", "त्रयोदशी", "चतुर्दशी"];
-    let idx = t.indexOf(current);
+    let idx = t.indexOf(cleanCurrent);
     if (idx !== -1) {
         if (idx === 13) return paksha === "शुक्ल" ? "पौर्णिमा" : "अमावस्या";
         return t[idx + 1];
     }
-    if (current === "पौर्णिमा" || current === "अमावस्या") return "प्रतिपदा";
+    if (cleanCurrent === "पौर्णिमा" || cleanCurrent === "अमावस्या") return "प्रतिपदा";
     return "";
 }
 
 function getNextItem(current, arr) {
     if (!current) return "";
-    let idx = arr.indexOf(current);
+    let cleanCurrent = current.trim();
+    let idx = arr.indexOf(cleanCurrent);
     return (idx !== -1) ? arr[(idx + 1) % arr.length] : "";
 }
 
 function translate(category, englishWord) {
     if (!englishWord) return "";
-    return marathiMapping[category][englishWord] || englishWord;
+    let cleanWord = englishWord.trim();
+    return marathiMapping[category][cleanWord] || cleanWord;
 }
 
 function formatTime(timeStr) {
@@ -124,13 +125,16 @@ async function fetchHybridData(dateObj) {
     try {
         const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
         if (mrRes.ok) moonRiseData = (await mrRes.json()).Payload;
-        await delay(15000); 
+        await delay(5000); // 15 seconds warun 5 seconds kela ahe mhanje script fast run hoil
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
     } catch (e) { console.error("VedAstro Error:", e); }
 
-    if (!freeAstroData) return null;
+    if (!freeAstroData) {
+        console.log(`Failed to fetch data for ${formattedDate}. API returned null.`);
+        return null;
+    }
 
     const karanObj = (freeAstroData.karanas && freeAstroData.karanas.length > 0) ? freeAstroData.karanas[0] : null;
 
@@ -163,7 +167,7 @@ async function fetchHybridData(dateObj) {
         
         "moon_rashi": translate("rashi", freeAstroData.request_time_panchang?.moon_sign?.name),
         "sun_rashi": translate("rashi", freeAstroData.request_time_panchang?.sun_sign?.name),
-        "guru_rashi": getSmartGuruRashi(dateObj), // Automatic 10-year calculation
+        "guru_rashi": getSmartGuruRashi(dateObj), 
         
         "lunar_month": translate("lunarMonth", freeAstroData.lunar_month?.name),
         "samvatsar": "पराभव",
@@ -205,7 +209,12 @@ async function updatePanchang() {
             newData[dateKey] = existingData[dateKey];
         } else {
             const apiResult = await fetchHybridData(dateObj);
-            if (apiResult) newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
+            if (apiResult) {
+                newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
+            } else if (existingData[dateKey]) {
+                // API fail zala tar juna data theva (UI crash honar nahi)
+                newData[dateKey] = existingData[dateKey];
+            }
         }
     }
 
