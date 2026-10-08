@@ -114,7 +114,8 @@ async function fetchHybridData(dateObj) {
         if (response.ok) freeAstroData = await response.json();
     } catch (e) { console.error("FreeAstro Error:", e); }
 
-    await delay(1500);
+    // API ब्लॉक होऊ नये म्हणून मोठा Delay
+    await delay(5000); 
 
     const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
     const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
@@ -123,14 +124,15 @@ async function fetchHybridData(dateObj) {
     try {
         const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
         if (mrRes.ok) moonRiseData = (await mrRes.json()).Payload;
-        await delay(3000); 
+        await delay(5000); 
 
         const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
         if (msRes.ok) moonSetData = (await msRes.json()).Payload;
+        await delay(5000);
     } catch (e) { console.error("VedAstro Error:", e); }
 
     if (!freeAstroData) {
-        console.log(`Failed to fetch data for ${formattedDate}.`);
+        console.log(`Failed to fetch data for ${formattedDate}. API rate limit hit.`);
         return null;
     }
 
@@ -186,10 +188,9 @@ async function updatePanchang() {
 
     const today = new Date();
     
-    // १५ दिवस मागचे आणि १५ दिवस पुढचे (एकूण ३१ दिवस)
     const datesToKeep = [];
     for (let i = -15; i <= 15; i++) {
-        let d = new Date(today);
+        let d = new Date(today.getTime());
         d.setDate(today.getDate() + i);
         datesToKeep.push(d.toISOString().split('T')[0]);
     }
