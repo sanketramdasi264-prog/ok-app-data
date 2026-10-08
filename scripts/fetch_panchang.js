@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PANCHANG_FILE = path.join(__dirname, '../data/panchang.json');
-const API_KEY = "841fcb1c925b06c53058eed60882c15e797be1a30486a080a40c6a09a2f2e65d";
+const API_KEY = "708f7cac2f34f1bd4c8f9c7553178716a6f8334631816dbcf260dc303f8aee97";
 
 const marathiMapping = {
     tithi: { "Pratipada": "प्रतिपदा", "Dvitiya": "द्वितीया", "Tritiya": "तृतीया", "Chaturthi": "चतुर्थी", "Panchami": "पंचमी", "Shashthi": "षष्ठी", "Shashti": "षष्ठी", "Saptami": "सप्तमी", "Ashtami": "अष्टमी", "Navami": "नवमी", "Dashami": "दशमी", "Ekadashi": "एकादशी", "Dvadashi": "द्वादशी", "Dwadashi": "द्वादशी", "Trayodashi": "त्रयोदशी", "Chaturdashi": "चतुर्दशी", "Purnima": "पौर्णिमा", "Poornima": "पौर्णिमा", "Amavasya": "अमावस्या" },
@@ -61,25 +61,13 @@ function getNextItem(current, arr) {
 function formatTime(timeStr) {
     if (!timeStr) return "";
     const parts = timeStr.split(':');
-    if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
-    return timeStr;
-}
-
-function format24Hour(timeStr) {
-    if (!timeStr) return "";
-    const parts = timeStr.split(':');
-    if (parts.length >= 2) {
-        let h = parseInt(parts[0], 10);
-        const m = parts[1];
-        if (h >= 0 && h <= 7) h += 24;
-        return `${String(h).padStart(2, '0')}:${m}`;
-    }
+    if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1]}`;
     return timeStr;
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-async function fetchPanchangData(dateObj) {
+async function fetchRawData(dateObj) {
     const yyyy = dateObj.getFullYear();
     const mm = dateObj.getMonth() + 1;
     const dd = dateObj.getDate();
@@ -88,71 +76,19 @@ async function fetchPanchangData(dateObj) {
     const mmStr = String(mm).padStart(2, '0');
     const formattedDate = `${ddStr}-${mmStr}-${yyyy}`;
     
-    console.log(`Fetching Data for ${formattedDate}...`);
-
     const payload = { year: yyyy, month: mm, day: dd, hour: 7, minute: 0, second: 0, lat: 19.07609, lng: 72.877426, tz: 5.5 };
 
     let fa = null;
     try {
-        const response = await fetch("https://api.freeastroapi.com/api/v2/vedic/panchang", {
+        const res = await fetch("https://api.freeastroapi.com/api/v2/vedic/panchang", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json", "x-api-key": API_KEY },
             body: JSON.stringify(payload)
         });
-        if (response.ok) fa = await response.json();
-    } catch (e) { console.error("FreeAstro Error:", e); }
+        if (res.ok) fa = await res.json();
+    } catch (e) { console.error("API Error:", e); }
 
-    await delay(1000); 
-
-    if (!fa) {
-        console.log(`Failed to fetch data for ${formattedDate}.`);
-        return null;
-    }
-
-    const karanObj = (fa.karanas && fa.karanas.length > 0) ? fa.karanas[0] : null;
-
-    const currentTithi = translate("tithi", fa.tithi?.name);
-    const currentPaksha = translate("paksha", fa.tithi?.paksha);
-    const currentNakshatra = translate("nakshatra", fa.nakshatra?.name);
-    const currentYog = translate("yog", fa.yoga?.name);
-    const currentKaran = translate("karan", karanObj?.name);
-
-    const fetchedData = {
-        "date": formattedDate,
-        "weekday": translate("weekdays", fa.weekday?.name),
-        "tithi": currentTithi,
-        "tithi_end": formatTime(fa.tithi?.ends_at),
-        "tithi_next": getNextTithi(currentTithi, currentPaksha),
-        "paksha": currentPaksha,
-        "nakshatra": currentNakshatra,
-        "nakshatra_end": formatTime(fa.nakshatra?.ends_at),
-        "nakshatra_next": getNextItem(currentNakshatra, nakshatraArr),
-        "yog": currentYog,
-        "yog_time": formatTime(fa.yoga?.ends_at),
-        "yog_next": getNextItem(currentYog, yogArr),
-        "karan": currentKaran,
-        "karan_end": formatTime(karanObj?.ends_at),
-        "karan_next": getNextItem(currentKaran, karanArr),
-        "moon_rashi": translate("rashi", fa.request_time_panchang?.moon_sign?.name),
-        "sun_rashi": translate("rashi", fa.request_time_panchang?.sun_sign?.name),
-        "guru_rashi": getSmartGuruRashi(dateObj),
-        "lunar_month": translate("lunarMonth", fa.lunar_month?.name),
-        "samvatsar": "पराभव",
-        "shaka_samvat": "१९४८",
-        "vikram_samvat": "२०८३",
-        "ayan": "दक्षिणायन",
-        "ritu": "शरद",
-        "sunrise": formatTime(fa.sunrise),
-        "sunset": formatTime(fa.sunset),
-        "moonrise": format24Hour(formatTime(fa.moonrise)), 
-        "moonset": format24Hour(formatTime(fa.moonset)),
-        "rahukaal": `${formatTime(fa.rahu_kalam?.start)} ते ${formatTime(fa.rahu_kalam?.end)}`,
-        "din_vishesh": "", 
-        "location": "Mumbai",
-        "is_manual_override": false
-    };
-
-    return fetchedData;
+    return { formattedDate, freeAstro: fa };
 }
 
 async function updatePanchang() {
@@ -160,33 +96,127 @@ async function updatePanchang() {
     if (fs.existsSync(PANCHANG_FILE)) existingData = JSON.parse(fs.readFileSync(PANCHANG_FILE, 'utf8'));
 
     const today = new Date();
+    // +4 दिवसाचा डेटा सुद्धा मागवतोय कारण उद्याची वेळ जर पहाटेची असेल तर ती आजच्या पंचांगात जोडायची आहे.
+    const fetchOffsets = [-3, -2, -1, 0, 1, 2, 3, 4]; 
     
-    // फक्त ७ दिवस: ३ मागचे, आजचा, आणि ३ पुढचे
-    const datesToKeep = [];
-    for (let i = -3; i <= 3; i++) {
-        let d = new Date(today.getTime());
-        d.setDate(today.getDate() + i);
-        datesToKeep.push(d.toISOString().split('T')[0]);
+    const allData = {};
+    for (const offset of fetchOffsets) {
+        let d = new Date(today);
+        d.setDate(today.getDate() + offset);
+        const k = d.toISOString().split('T')[0];
+        console.log(`Fetching Data for ${k}...`);
+        allData[k] = await fetchRawData(d);
+        await delay(1000); 
     }
-    
-    let newData = {};
 
-    for (const dateKey of datesToKeep) {
-        const dateObj = new Date(dateKey);
-        if (existingData[dateKey] && existingData[dateKey].is_manual_override) {
-            newData[dateKey] = existingData[dateKey];
-        } else {
-            const apiResult = await fetchPanchangData(dateObj);
-            if (apiResult) {
-                newData[dateKey] = { ...existingData[dateKey], ...apiResult, is_manual_override: false };
-            } else if (existingData[dateKey]) {
-                newData[dateKey] = existingData[dateKey];
-            }
+    let finalJson = {};
+
+    // लूप फक्त ७ दिवसांसाठी (७ तारखेसाठी ८ तारखेचा डेटा वापरला जाईल)
+    for (let i = 0; i < 7; i++) {
+        let offset = fetchOffsets[i];
+        let d = new Date(today);
+        d.setDate(today.getDate() + offset);
+        let currentKey = d.toISOString().split('T')[0];
+        
+        let nextD = new Date(today);
+        nextD.setDate(today.getDate() + offset + 1);
+        let nextKey = nextD.toISOString().split('T')[0];
+
+        let cur = allData[currentKey];
+        let nxt = allData[nextKey];
+
+        if (!cur || !cur.freeAstro) {
+            if (existingData[currentKey]) finalJson[currentKey] = existingData[currentKey];
+            continue;
         }
+
+        const fa = cur.freeAstro;
+        const fa_nxt = nxt ? nxt.freeAstro : null;
+        
+        const karanObj = (fa.karanas && fa.karanas.length > 0) ? fa.karanas[0] : null;
+
+        const currentTithi = translate("tithi", fa.tithi?.name);
+        const currentPaksha = translate("paksha", fa.tithi?.paksha);
+        const currentNakshatra = translate("nakshatra", fa.nakshatra?.name);
+        const currentYog = translate("yog", fa.yoga?.name);
+        const currentKaran = translate("karan", karanObj?.name);
+
+        // --- Shift Logic for Moonrise ---
+        let finalMoonrise = "";
+        let cur_mr = formatTime(fa.moonrise);
+        if (cur_mr) {
+            let [h, m] = cur_mr.split(':').map(Number);
+            if (h < 7) {
+                // आजची वेळ पहाटेची आहे, म्हणजे ती कालची आहे. आजची खरी वेळ 'उद्याच्या' डेटामध्ये असेल.
+                if (fa_nxt && fa_nxt.moonrise) {
+                    let [nh, nm] = formatTime(fa_nxt.moonrise).split(':').map(Number);
+                    finalMoonrise = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : formatTime(fa_nxt.moonrise);
+                }
+            } else {
+                finalMoonrise = cur_mr;
+            }
+        } else if (fa_nxt && fa_nxt.moonrise) {
+            // जर आज चंद्रोदय नसेल (अमावास्या/पौर्णिमा), तर उद्याची वेळ बघा
+            let [nh, nm] = formatTime(fa_nxt.moonrise).split(':').map(Number);
+            if (nh < 7) finalMoonrise = `${nh + 24}:${String(nm).padStart(2, '0')}`;
+        }
+
+        // --- Shift Logic for Moonset ---
+        let finalMoonset = "";
+        let cur_ms = formatTime(fa.moonset);
+        if (cur_ms) {
+            let [h, m] = cur_ms.split(':').map(Number);
+            if (h < 7) {
+                if (fa_nxt && fa_nxt.moonset) {
+                    let [nh, nm] = formatTime(fa_nxt.moonset).split(':').map(Number);
+                    finalMoonset = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : formatTime(fa_nxt.moonset);
+                }
+            } else {
+                finalMoonset = cur_ms;
+            }
+        } else if (fa_nxt && fa_nxt.moonset) {
+            let [nh, nm] = formatTime(fa_nxt.moonset).split(':').map(Number);
+            if (nh < 7) finalMoonset = `${nh + 24}:${String(nm).padStart(2, '0')}`;
+        }
+
+        finalJson[currentKey] = {
+            "date": cur.formattedDate,
+            "weekday": translate("weekdays", fa.weekday?.name),
+            "tithi": currentTithi,
+            "tithi_end": formatTime(fa.tithi?.ends_at),
+            "tithi_next": getNextTithi(currentTithi, currentPaksha),
+            "paksha": currentPaksha,
+            "nakshatra": currentNakshatra,
+            "nakshatra_end": formatTime(fa.nakshatra?.ends_at),
+            "nakshatra_next": getNextItem(currentNakshatra, nakshatraArr),
+            "yog": currentYog,
+            "yog_time": formatTime(fa.yoga?.ends_at),
+            "yog_next": getNextItem(currentYog, yogArr),
+            "karan": currentKaran,
+            "karan_end": formatTime(karanObj?.ends_at),
+            "karan_next": getNextItem(currentKaran, karanArr),
+            "moon_rashi": translate("rashi", fa.request_time_panchang?.moon_sign?.name),
+            "sun_rashi": translate("rashi", fa.request_time_panchang?.sun_sign?.name),
+            "guru_rashi": getSmartGuruRashi(d),
+            "lunar_month": translate("lunarMonth", fa.lunar_month?.name),
+            "samvatsar": "पराभव",
+            "shaka_samvat": "१९४८",
+            "vikram_samvat": "२०८३",
+            "ayan": "दक्षिणायन",
+            "ritu": "शरद",
+            "sunrise": formatTime(fa.sunrise),
+            "sunset": formatTime(fa.sunset),
+            "moonrise": finalMoonrise,
+            "moonset": finalMoonset,
+            "rahukaal": `${formatTime(fa.rahu_kalam?.start)} ते ${formatTime(fa.rahu_kalam?.end)}`,
+            "din_vishesh": "", 
+            "location": "Mumbai",
+            "is_manual_override": false
+        };
     }
 
-    fs.writeFileSync(PANCHANG_FILE, JSON.stringify(newData, null, 2), 'utf8');
-    console.log("७ दिवसांचा पंचांग डेटा यशस्वीरित्या अपडेट झाला!");
+    fs.writeFileSync(PANCHANG_FILE, JSON.stringify(finalJson, null, 2), 'utf8');
+    console.log("अचूक चंद्रोदयांसह ७ दिवसांचा पंचांग डेटा अपडेट झाला!");
 }
 
 updatePanchang();
