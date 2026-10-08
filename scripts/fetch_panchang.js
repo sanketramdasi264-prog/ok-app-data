@@ -61,8 +61,24 @@ function getNextItem(current, arr) {
 function formatTime(timeStr) {
     if (!timeStr) return "";
     const parts = timeStr.split(':');
-    if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1]}`;
+    if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
     return timeStr;
+}
+
+// "Free" किंवा इतर त्रुटी काढून फक्त अचूक वेळ काढणे
+function sanitizeTime(timeData) {
+    if (!timeData) return "";
+    let str = "";
+    if (typeof timeData === 'object' && timeData.StdTime) {
+        str = String(timeData.StdTime).split(' ')[0];
+    } else if (typeof timeData === 'string') {
+        str = timeData.split(' ')[0];
+    }
+    const match = str.match(/^(\d{1,2}):(\d{2})/);
+    if (match) {
+        return `${match[1].padStart(2, '0')}:${match[2]}`;
+    }
+    return "";
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -71,24 +87,39 @@ async function fetchRawData(dateObj) {
     const yyyy = dateObj.getFullYear();
     const mm = dateObj.getMonth() + 1;
     const dd = dateObj.getDate();
-    
     const ddStr = String(dd).padStart(2, '0');
     const mmStr = String(mm).padStart(2, '0');
     const formattedDate = `${ddStr}-${mmStr}-${yyyy}`;
-    
+
     const payload = { year: yyyy, month: mm, day: dd, hour: 7, minute: 0, second: 0, lat: 19.07609, lng: 72.877426, tz: 5.5 };
 
-    let fa = null;
+    let freeAstro = null;
     try {
         const res = await fetch("https://api.freeastroapi.com/api/v2/vedic/panchang", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json", "x-api-key": API_KEY },
             body: JSON.stringify(payload)
         });
-        if (res.ok) fa = await res.json();
-    } catch (e) { console.error("API Error:", e); }
+        if (res.ok) freeAstro = await res.json();
+    } catch (e) { console.error("FreeAstro Error:", e.message); }
 
-    return { formattedDate, freeAstro: fa };
+    await delay(3000); // 3-सेकंद ब्रेक
+
+    const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
+    const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
+
+    let rawMoonrise = "", rawMoonset = "";
+    try {
+        const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
+        if (mrRes.ok) rawMoonrise = sanitizeTime((await mrRes.json()).Payload);
+        await delay(5000); // VedAstro ला ब्लॉक होण्यापासून वाचवण्यासाठी ५-सेकंद ब्रेक
+
+        const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
+        if (msRes.ok) rawMoonset = sanitizeTime((await msRes.json()).Payload);
+        await delay(5000); // पुन्हा ५-सेकंद ब्रेक
+    } catch (e) { console.error("VedAstro Error:", e.message); }
+
+    return { formattedDate, freeAstro, rawMoonrise, rawMoonset };
 }
 
 async function updatePanchang() {
@@ -96,43 +127,45 @@ async function updatePanchang() {
     if (fs.existsSync(PANCHANG_FILE)) existingData = JSON.parse(fs.readFileSync(PANCHANG_FILE, 'utf8'));
 
     const today = new Date();
-    // +4 दिवसाचा डेटा सुद्धा मागवतोय कारण उद्याची वेळ जर पहाटेची असेल तर ती आजच्या पंचांगात जोडायची आहे.
-    const fetchOffsets = [-3, -2, -1, 0, 1, 2, 3, 4]; 
-    
-    const allData = {};
+    // फक्त ७ दिवस (-३ ते +३)
+    const offsets = [-3, -2, -1, 0, 1, 2, 3];
+    const dateKeys = offsets.map(i => {
+        let d = new Date(today);
+        d.setDate(today.getDate() + i);
+        return d.toISOString().split('T')[0];
+    });
+
+    // शिफ्ट लॉजिकसाठी (उद्याची पहाटेची वेळ आज टाकण्यासाठी) +४ दिवसाचा डेटा पण काढू
+    const fetchOffsets = [...offsets, 4];
+    const allFetched = {};
+
     for (const offset of fetchOffsets) {
         let d = new Date(today);
         d.setDate(today.getDate() + offset);
         const k = d.toISOString().split('T')[0];
-        console.log(`Fetching Data for ${k}...`);
-        allData[k] = await fetchRawData(d);
-        await delay(1000); 
+        console.log(`डेटा फेच होत आहे: ${k}...`);
+        allFetched[k] = await fetchRawData(d);
+        await delay(2000);
     }
 
-    let finalJson = {};
+    let finalData = {};
 
-    // लूप फक्त ७ दिवसांसाठी (७ तारखेसाठी ८ तारखेचा डेटा वापरला जाईल)
-    for (let i = 0; i < 7; i++) {
-        let offset = fetchOffsets[i];
-        let d = new Date(today);
-        d.setDate(today.getDate() + offset);
-        let currentKey = d.toISOString().split('T')[0];
-        
-        let nextD = new Date(today);
-        nextD.setDate(today.getDate() + offset + 1);
-        let nextKey = nextD.toISOString().split('T')[0];
+    for (let i = 0; i < offsets.length; i++) {
+        const currentKey = dateKeys[i];
+        let nextD = new Date(currentKey);
+        nextD.setDate(nextD.getDate() + 1);
+        const nextKey = nextD.toISOString().split('T')[0];
 
-        let cur = allData[currentKey];
-        let nxt = allData[nextKey];
+        const dateObj = new Date(currentKey);
+        const cur = allFetched[currentKey];
+        const nxt = allFetched[nextKey];
 
         if (!cur || !cur.freeAstro) {
-            if (existingData[currentKey]) finalJson[currentKey] = existingData[currentKey];
+            if (existingData[currentKey]) finalData[currentKey] = existingData[currentKey];
             continue;
         }
 
         const fa = cur.freeAstro;
-        const fa_nxt = nxt ? nxt.freeAstro : null;
-        
         const karanObj = (fa.karanas && fa.karanas.length > 0) ? fa.karanas[0] : null;
 
         const currentTithi = translate("tithi", fa.tithi?.name);
@@ -141,45 +174,35 @@ async function updatePanchang() {
         const currentYog = translate("yog", fa.yoga?.name);
         const currentKaran = translate("karan", karanObj?.name);
 
+        const sunriseTime = formatTime(fa.sunrise) || "06:30";
+        const sunsetTime = formatTime(fa.sunset) || "18:20";
+
         // --- Shift Logic for Moonrise ---
-        let finalMoonrise = "";
-        let cur_mr = formatTime(fa.moonrise);
-        if (cur_mr) {
-            let [h, m] = cur_mr.split(':').map(Number);
+        let finalMoonrise = cur.rawMoonrise;
+        if (cur.rawMoonrise) {
+            const [h, m] = cur.rawMoonrise.split(':').map(Number);
             if (h < 7) {
-                // आजची वेळ पहाटेची आहे, म्हणजे ती कालची आहे. आजची खरी वेळ 'उद्याच्या' डेटामध्ये असेल.
-                if (fa_nxt && fa_nxt.moonrise) {
-                    let [nh, nm] = formatTime(fa_nxt.moonrise).split(':').map(Number);
-                    finalMoonrise = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : formatTime(fa_nxt.moonrise);
+                // जर आजची वेळ पहाटेची असेल, तर उद्याची वेळ बघा आणि त्यात २४ मिळवा
+                if (nxt && nxt.rawMoonrise) {
+                    const [nh, nm] = nxt.rawMoonrise.split(':').map(Number);
+                    finalMoonrise = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : nxt.rawMoonrise;
                 }
-            } else {
-                finalMoonrise = cur_mr;
             }
-        } else if (fa_nxt && fa_nxt.moonrise) {
-            // जर आज चंद्रोदय नसेल (अमावास्या/पौर्णिमा), तर उद्याची वेळ बघा
-            let [nh, nm] = formatTime(fa_nxt.moonrise).split(':').map(Number);
-            if (nh < 7) finalMoonrise = `${nh + 24}:${String(nm).padStart(2, '0')}`;
         }
 
         // --- Shift Logic for Moonset ---
-        let finalMoonset = "";
-        let cur_ms = formatTime(fa.moonset);
-        if (cur_ms) {
-            let [h, m] = cur_ms.split(':').map(Number);
-            if (h < 7) {
-                if (fa_nxt && fa_nxt.moonset) {
-                    let [nh, nm] = formatTime(fa_nxt.moonset).split(':').map(Number);
-                    finalMoonset = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : formatTime(fa_nxt.moonset);
+        let finalMoonset = cur.rawMoonset;
+        if (cur.rawMoonset) {
+            const [sh, sm] = cur.rawMoonset.split(':').map(Number);
+            if (sh < 7) {
+                if (nxt && nxt.rawMoonset) {
+                    const [nh, nm] = nxt.rawMoonset.split(':').map(Number);
+                    finalMoonset = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : nxt.rawMoonset;
                 }
-            } else {
-                finalMoonset = cur_ms;
             }
-        } else if (fa_nxt && fa_nxt.moonset) {
-            let [nh, nm] = formatTime(fa_nxt.moonset).split(':').map(Number);
-            if (nh < 7) finalMoonset = `${nh + 24}:${String(nm).padStart(2, '0')}`;
         }
 
-        finalJson[currentKey] = {
+        finalData[currentKey] = {
             "date": cur.formattedDate,
             "weekday": translate("weekdays", fa.weekday?.name),
             "tithi": currentTithi,
@@ -197,26 +220,26 @@ async function updatePanchang() {
             "karan_next": getNextItem(currentKaran, karanArr),
             "moon_rashi": translate("rashi", fa.request_time_panchang?.moon_sign?.name),
             "sun_rashi": translate("rashi", fa.request_time_panchang?.sun_sign?.name),
-            "guru_rashi": getSmartGuruRashi(d),
+            "guru_rashi": getSmartGuruRashi(dateObj),
             "lunar_month": translate("lunarMonth", fa.lunar_month?.name),
             "samvatsar": "पराभव",
             "shaka_samvat": "१९४८",
             "vikram_samvat": "२०८३",
             "ayan": "दक्षिणायन",
             "ritu": "शरद",
-            "sunrise": formatTime(fa.sunrise),
-            "sunset": formatTime(fa.sunset),
+            "sunrise": sunriseTime,
+            "sunset": sunsetTime,
             "moonrise": finalMoonrise,
             "moonset": finalMoonset,
             "rahukaal": `${formatTime(fa.rahu_kalam?.start)} ते ${formatTime(fa.rahu_kalam?.end)}`,
-            "din_vishesh": "", 
+            "din_vishesh": "",
             "location": "Mumbai",
             "is_manual_override": false
         };
     }
 
-    fs.writeFileSync(PANCHANG_FILE, JSON.stringify(finalJson, null, 2), 'utf8');
-    console.log("अचूक चंद्रोदयांसह ७ दिवसांचा पंचांग डेटा अपडेट झाला!");
+    fs.writeFileSync(PANCHANG_FILE, JSON.stringify(finalData, null, 2), 'utf8');
+    console.log("७ दिवसांचा पंचांग डेटा (अचूक चंद्रोदयांसह) यशस्वीरित्या अपडेट झाला!");
 }
 
 updatePanchang();
