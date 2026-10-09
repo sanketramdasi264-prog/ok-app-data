@@ -61,19 +61,14 @@ function getNextItem(current, arr) {
 function formatTime(timeStr) {
     if (!timeStr) return "";
     const parts = timeStr.split(':');
-    if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+    if (parts.length >= 2) return `${parts[0].padStart(2, '0')}:${parts[1]}`;
     return timeStr;
 }
 
-// "Free" किंवा इतर त्रुटी काढून फक्त अचूक वेळ काढणे
-function sanitizeTime(timeData) {
-    if (!timeData) return "";
-    let str = "";
-    if (typeof timeData === 'object' && timeData.StdTime) {
-        str = String(timeData.StdTime).split(' ')[0];
-    } else if (typeof timeData === 'string') {
-        str = timeData.split(' ')[0];
-    }
+// नवीन POST स्ट्रक्चर मधून अचूक वेळ काढणे (उदा. "04:32 09/10/2026 +05:30")
+function sanitizeVedAstroTime(timeStr) {
+    if (!timeStr) return "";
+    let str = String(timeStr).trim();
     const match = str.match(/^(\d{1,2}):(\d{2})/);
     if (match) {
         return `${match[1].padStart(2, '0')}:${match[2]}`;
@@ -91,32 +86,58 @@ async function fetchRawData(dateObj) {
     const mmStr = String(mm).padStart(2, '0');
     const formattedDate = `${ddStr}-${mmStr}-${yyyy}`;
 
-    const payload = { year: yyyy, month: mm, day: dd, hour: 7, minute: 0, second: 0, lat: 19.07609, lng: 72.877426, tz: 5.5 };
-
     let freeAstro = null;
     try {
+        const faPayload = { year: yyyy, month: mm, day: dd, hour: 7, minute: 0, second: 0, lat: 19.07609, lng: 72.877426, tz: 5.5 };
         const res = await fetch("https://api.freeastroapi.com/api/v2/vedic/panchang", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json", "x-api-key": API_KEY },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(faPayload)
         });
         if (res.ok) freeAstro = await res.json();
     } catch (e) { console.error("FreeAstro Error:", e.message); }
 
-    await delay(3000); // 3-सेकंद ब्रेक
+    await delay(1000);
 
-    const vedAstroBaseUrl = `https://api.vedastro.org/api/Calculate`;
-    const locTimeStr = `Location/Mumbai/Time/07:00/${ddStr}/${mmStr}/${yyyy}/+05:30`;
+    // तुम्ही शोधलेली नवीन VedAstro ची POST पद्धत
+    const vedAstroPayload = {
+        "Time": {
+            "StdTime": `12:00 ${ddStr}/${mmStr}/${yyyy} +05:30`,
+            "Location": {
+                "Name": "Mumbai, Maharashtra, India",
+                "Latitude": 18.969,
+                "Longitude": 72.821
+            }
+        },
+        "Ayanamsa": "RAMAN"
+    };
 
     let rawMoonrise = "", rawMoonset = "";
     try {
-        const mrRes = await fetch(`${vedAstroBaseUrl}/MoonriseTime/${locTimeStr}`);
-        if (mrRes.ok) rawMoonrise = sanitizeTime((await mrRes.json()).Payload);
-        await delay(5000); // VedAstro ला ब्लॉक होण्यापासून वाचवण्यासाठी ५-सेकंद ब्रेक
+        const mrRes = await fetch("https://vedastro.zaishi.net/api/Calculate/MoonriseTime", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vedAstroPayload)
+        });
+        if (mrRes.ok) {
+            const mrJson = await mrRes.json();
+            if (mrJson.Status === "Pass" && mrJson.Payload && mrJson.Payload.MoonriseTime) {
+                rawMoonrise = sanitizeVedAstroTime(mrJson.Payload.MoonriseTime.StdTime);
+            }
+        }
+        await delay(2000);
 
-        const msRes = await fetch(`${vedAstroBaseUrl}/MoonsetTime/${locTimeStr}`);
-        if (msRes.ok) rawMoonset = sanitizeTime((await msRes.json()).Payload);
-        await delay(5000); // पुन्हा ५-सेकंद ब्रेक
+        const msRes = await fetch("https://vedastro.zaishi.net/api/Calculate/MoonsetTime", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(vedAstroPayload)
+        });
+        if (msRes.ok) {
+            const msJson = await msRes.json();
+            if (msJson.Status === "Pass" && msJson.Payload && msJson.Payload.MoonsetTime) {
+                rawMoonset = sanitizeVedAstroTime(msJson.Payload.MoonsetTime.StdTime);
+            }
+        }
     } catch (e) { console.error("VedAstro Error:", e.message); }
 
     return { formattedDate, freeAstro, rawMoonrise, rawMoonset };
@@ -127,7 +148,6 @@ async function updatePanchang() {
     if (fs.existsSync(PANCHANG_FILE)) existingData = JSON.parse(fs.readFileSync(PANCHANG_FILE, 'utf8'));
 
     const today = new Date();
-    // फक्त ७ दिवस (-३ ते +३)
     const offsets = [-3, -2, -1, 0, 1, 2, 3];
     const dateKeys = offsets.map(i => {
         let d = new Date(today);
@@ -135,7 +155,6 @@ async function updatePanchang() {
         return d.toISOString().split('T')[0];
     });
 
-    // शिफ्ट लॉजिकसाठी (उद्याची पहाटेची वेळ आज टाकण्यासाठी) +४ दिवसाचा डेटा पण काढू
     const fetchOffsets = [...offsets, 4];
     const allFetched = {};
 
@@ -145,7 +164,7 @@ async function updatePanchang() {
         const k = d.toISOString().split('T')[0];
         console.log(`डेटा फेच होत आहे: ${k}...`);
         allFetched[k] = await fetchRawData(d);
-        await delay(2000);
+        await delay(1000);
     }
 
     let finalData = {};
@@ -182,7 +201,6 @@ async function updatePanchang() {
         if (cur.rawMoonrise) {
             const [h, m] = cur.rawMoonrise.split(':').map(Number);
             if (h < 7) {
-                // जर आजची वेळ पहाटेची असेल, तर उद्याची वेळ बघा आणि त्यात २४ मिळवा
                 if (nxt && nxt.rawMoonrise) {
                     const [nh, nm] = nxt.rawMoonrise.split(':').map(Number);
                     finalMoonrise = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : nxt.rawMoonrise;
@@ -239,7 +257,7 @@ async function updatePanchang() {
     }
 
     fs.writeFileSync(PANCHANG_FILE, JSON.stringify(finalData, null, 2), 'utf8');
-    console.log("७ दिवसांचा पंचांग डेटा (अचूक चंद्रोदयांसह) यशस्वीरित्या अपडेट झाला!");
+    console.log("७ दिवसांचा पंचांग डेटा (POST Request सह) यशस्वीरित्या अपडेट झाला!");
 }
 
 updatePanchang();
