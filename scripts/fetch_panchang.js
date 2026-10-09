@@ -65,14 +65,11 @@ function formatTime(timeStr) {
     return timeStr;
 }
 
-// नवीन POST स्ट्रक्चर मधून अचूक वेळ काढणे (उदा. "04:32 09/10/2026 +05:30")
 function sanitizeVedAstroTime(timeStr) {
     if (!timeStr) return "";
     let str = String(timeStr).trim();
     const match = str.match(/^(\d{1,2}):(\d{2})/);
-    if (match) {
-        return `${match[1].padStart(2, '0')}:${match[2]}`;
-    }
+    if (match) return `${match[1].padStart(2, '0')}:${match[2]}`;
     return "";
 }
 
@@ -99,20 +96,15 @@ async function fetchRawData(dateObj) {
 
     await delay(1000);
 
-    // तुम्ही शोधलेली नवीन VedAstro ची POST पद्धत
     const vedAstroPayload = {
         "Time": {
             "StdTime": `12:00 ${ddStr}/${mmStr}/${yyyy} +05:30`,
-            "Location": {
-                "Name": "Mumbai, Maharashtra, India",
-                "Latitude": 18.969,
-                "Longitude": 72.821
-            }
+            "Location": { "Name": "Mumbai", "Latitude": 18.969, "Longitude": 72.821 }
         },
         "Ayanamsa": "RAMAN"
     };
 
-    let rawMoonrise = "", rawMoonset = "";
+    let rawMoonrise = "";
     try {
         const mrRes = await fetch("https://vedastro.zaishi.net/api/Calculate/MoonriseTime", {
             method: "POST",
@@ -125,22 +117,9 @@ async function fetchRawData(dateObj) {
                 rawMoonrise = sanitizeVedAstroTime(mrJson.Payload.MoonriseTime.StdTime);
             }
         }
-        await delay(2000);
-
-        const msRes = await fetch("https://vedastro.zaishi.net/api/Calculate/MoonsetTime", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(vedAstroPayload)
-        });
-        if (msRes.ok) {
-            const msJson = await msRes.json();
-            if (msJson.Status === "Pass" && msJson.Payload && msJson.Payload.MoonsetTime) {
-                rawMoonset = sanitizeVedAstroTime(msJson.Payload.MoonsetTime.StdTime);
-            }
-        }
     } catch (e) { console.error("VedAstro Error:", e.message); }
 
-    return { formattedDate, freeAstro, rawMoonrise, rawMoonset };
+    return { formattedDate, freeAstro, rawMoonrise };
 }
 
 async function updatePanchang() {
@@ -148,14 +127,16 @@ async function updatePanchang() {
     if (fs.existsSync(PANCHANG_FILE)) existingData = JSON.parse(fs.readFileSync(PANCHANG_FILE, 'utf8'));
 
     const today = new Date();
-    const offsets = [-3, -2, -1, 0, 1, 2, 3];
+    // फक्त काल (-1), आज (0), आणि उद्या (1)
+    const offsets = [-1, 0, 1];
     const dateKeys = offsets.map(i => {
         let d = new Date(today);
         d.setDate(today.getDate() + i);
         return d.toISOString().split('T')[0];
     });
 
-    const fetchOffsets = [...offsets, 4];
+    // शिफ्ट लॉजिकसाठी +2 दिवसाचा डेटा पण काढू
+    const fetchOffsets = [-1, 0, 1, 2];
     const allFetched = {};
 
     for (const offset of fetchOffsets) {
@@ -204,18 +185,8 @@ async function updatePanchang() {
                 if (nxt && nxt.rawMoonrise) {
                     const [nh, nm] = nxt.rawMoonrise.split(':').map(Number);
                     finalMoonrise = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : nxt.rawMoonrise;
-                }
-            }
-        }
-
-        // --- Shift Logic for Moonset ---
-        let finalMoonset = cur.rawMoonset;
-        if (cur.rawMoonset) {
-            const [sh, sm] = cur.rawMoonset.split(':').map(Number);
-            if (sh < 7) {
-                if (nxt && nxt.rawMoonset) {
-                    const [nh, nm] = nxt.rawMoonset.split(':').map(Number);
-                    finalMoonset = nh < 7 ? `${nh + 24}:${String(nm).padStart(2, '0')}` : nxt.rawMoonset;
+                } else {
+                    finalMoonrise = `${h + 24}:${String(m).padStart(2, '0')}`;
                 }
             }
         }
@@ -248,7 +219,7 @@ async function updatePanchang() {
             "sunrise": sunriseTime,
             "sunset": sunsetTime,
             "moonrise": finalMoonrise,
-            "moonset": finalMoonset,
+            "moonset": "", 
             "rahukaal": `${formatTime(fa.rahu_kalam?.start)} ते ${formatTime(fa.rahu_kalam?.end)}`,
             "din_vishesh": "",
             "location": "Mumbai",
@@ -257,7 +228,7 @@ async function updatePanchang() {
     }
 
     fs.writeFileSync(PANCHANG_FILE, JSON.stringify(finalData, null, 2), 'utf8');
-    console.log("७ दिवसांचा पंचांग डेटा (POST Request सह) यशस्वीरित्या अपडेट झाला!");
+    console.log("३ दिवसांचा पंचांग डेटा यशस्वीरित्या अपडेट झाला!");
 }
 
 updatePanchang();
