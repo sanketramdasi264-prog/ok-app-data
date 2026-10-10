@@ -76,9 +76,9 @@ function sanitizeVedAstroTime(timeStr) {
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchRawData(dateObj) {
-    const yyyy = dateObj.getFullYear();
-    const mm = dateObj.getMonth() + 1;
-    const dd = dateObj.getDate();
+    const yyyy = dateObj.getUTCFullYear();
+    const mm = dateObj.getUTCMonth() + 1;
+    const dd = dateObj.getUTCDate();
     const ddStr = String(dd).padStart(2, '0');
     const mmStr = String(mm).padStart(2, '0');
     const formattedDate = `${ddStr}-${mmStr}-${yyyy}`;
@@ -126,25 +126,31 @@ async function updatePanchang() {
     let existingData = {};
     if (fs.existsSync(PANCHANG_FILE)) existingData = JSON.parse(fs.readFileSync(PANCHANG_FILE, 'utf8'));
 
-    const today = new Date();
+    // --- Timezone Fix (India Standard Time - IST) ---
+    // GitHub Action UTC (Global) वेळेवर चालते. त्यात ५.५ तास मिळवून आपण 'आजची' अचूक भारतीय वेळ सेट करत आहोत.
+    const now = new Date();
+    const today = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    
     // फक्त काल (-1), आज (0), आणि उद्या (1)
     const offsets = [-1, 0, 1];
     const dateKeys = offsets.map(i => {
-        let d = new Date(today);
-        d.setDate(today.getDate() + i);
+        let d = new Date(today.getTime());
+        d.setUTCDate(today.getUTCDate() + i);
         return d.toISOString().split('T')[0];
     });
 
-    // शिफ्ट लॉजिकसाठी +2 दिवसाचा डेटा पण काढू
     const fetchOffsets = [-1, 0, 1, 2];
     const allFetched = {};
 
     for (const offset of fetchOffsets) {
-        let d = new Date(today);
-        d.setDate(today.getDate() + offset);
+        let d = new Date(today.getTime());
+        d.setUTCDate(today.getUTCDate() + offset);
         const k = d.toISOString().split('T')[0];
+        
+        const fetchDateObj = new Date(k + "T12:00:00Z"); 
+        
         console.log(`डेटा फेच होत आहे: ${k}...`);
-        allFetched[k] = await fetchRawData(d);
+        allFetched[k] = await fetchRawData(fetchDateObj);
         await delay(1000);
     }
 
@@ -152,11 +158,11 @@ async function updatePanchang() {
 
     for (let i = 0; i < offsets.length; i++) {
         const currentKey = dateKeys[i];
-        let nextD = new Date(currentKey);
-        nextD.setDate(nextD.getDate() + 1);
+        let nextD = new Date(currentKey + "T12:00:00Z");
+        nextD.setUTCDate(nextD.getUTCDate() + 1);
         const nextKey = nextD.toISOString().split('T')[0];
 
-        const dateObj = new Date(currentKey);
+        const dateObj = new Date(currentKey + "T12:00:00Z");
         const cur = allFetched[currentKey];
         const nxt = allFetched[nextKey];
 
@@ -228,7 +234,7 @@ async function updatePanchang() {
     }
 
     fs.writeFileSync(PANCHANG_FILE, JSON.stringify(finalData, null, 2), 'utf8');
-    console.log("३ दिवसांचा पंचांग डेटा यशस्वीरित्या अपडेट झाला!");
+    console.log("३ दिवसांचा पंचांग डेटा (IST Fix सह) यशस्वीरित्या अपडेट झाला!");
 }
 
 updatePanchang();
