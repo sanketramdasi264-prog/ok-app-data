@@ -97,8 +97,8 @@
     "moonrise": "",
     "moonset": "",
     "rahukaal": "13:47 ते 15:12",
-    "din_vishesh": "रमा एकादशी, गोवत्स द्वादशी, उत्पन्ना एकादशी",
+    "din_vishesh": "रमा एकादशी, गोवत्स द्वादशी, वसुबारस ",
     "location": "Mumbai",
-    "is_manual_override": false
+    "is_manual_override": true
   }
 }
