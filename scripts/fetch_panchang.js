@@ -114,7 +114,7 @@ const dinvisheshData = {
     "25-10-2026": "कोजागरी पौर्णिमा / शरद पौर्णिमा",
     "29-10-2026": "वक्रतुंड संकष्टी चतुर्थी, करवा चौथ",
     "01-11-2026": "अहोई अष्टमी",
-    "05-11-2026": "रमा एकादशी, गोवत्स द्वादशी, उत्पन्ना एकादशी",
+    "05-11-2026": "रमा एकादशी, गोवत्स द्वादशी, वसुबारस", // Updated here
     "06-11-2026": "धनत्रयोदशी / धनतेरस, प्रदोष व्रत",
     "07-11-2026": "नरक चतुर्दशी / काली चौदस, कार्तिक मासिक शिवरात्री",
     "08-11-2026": "लक्ष्मीपूजन / दिवाळी अमावस्या",
@@ -302,19 +302,36 @@ async function updatePanchang() {
     const now = new Date();
     const today = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
     
-    const offsets = [-1, 0, 1];
+    const offsets = [-1, 0, 1, 2]; // 4 days offset implementation
     let finalData = {};
 
-    for (const offset of offsets) {
+    const fetchOffsets = [-1, 0, 1, 2, 3]; // One extra day to evaluate moonrise timing
+
+    const allFetched = {};
+    for (const offset of fetchOffsets) {
         let d = new Date(today.getTime());
         d.setUTCDate(today.getUTCDate() + offset);
+        const k = d.toISOString().split('T')[0];
+        
+        const fetchDateObj = new Date(k + "T12:00:00Z"); 
+        
+        console.log(`Data fetch hot ahe: ${k}...`);
+        allFetched[k] = await fetchRawData(fetchDateObj);
+        await delay(1500);
+    }
+
+    for (let i = 0; i < offsets.length; i++) {
+        let d = new Date(today.getTime());
+        d.setUTCDate(today.getUTCDate() + offsets[i]);
         const currentKey = d.toISOString().split('T')[0];
         
-        const fetchDateObj = new Date(currentKey + "T12:00:00Z"); 
-        
-        console.log(`Data fetch hot ahe: ${currentKey}...`);
-        const cur = await fetchRawData(fetchDateObj);
-        await delay(1500);
+        let nextD = new Date(currentKey + "T12:00:00Z");
+        nextD.setUTCDate(nextD.getUTCDate() + 1);
+        const nextKey = nextD.toISOString().split('T')[0];
+
+        const dateObj = new Date(currentKey + "T12:00:00Z");
+        const cur = allFetched[currentKey];
+        const nxt = allFetched[nextKey];
 
         if (!cur || !cur.freeAstro) {
             if (existingData[currentKey]) finalData[currentKey] = existingData[currentKey];
@@ -334,18 +351,12 @@ async function updatePanchang() {
             let isCurBeforeSunrise = (ch < sh) || (ch === sh && cm < sm);
             
             if (currentTithi === "अमावस्या") {
-                let nextDayObj = new Date(fetchDateObj.getTime());
-                nextDayObj.setUTCDate(nextDayObj.getUTCDate() + 1);
-                const nxt = await fetchRawData(nextDayObj);
                 if (nxt && nxt.finalMoonrise) {
                     let [nh, nm] = nxt.finalMoonrise.split(':').map(Number);
                     if (nh >= 24) nh -= 24; 
                     rawFinalMoonrise = `पु. दि ${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`;
                 }
             } else if (isCurBeforeSunrise) {
-                let nextDayObj = new Date(fetchDateObj.getTime());
-                nextDayObj.setUTCDate(nextDayObj.getUTCDate() + 1);
-                const nxt = await fetchRawData(nextDayObj);
                 if (nxt && nxt.finalMoonrise) {
                     let [nh, nm] = nxt.finalMoonrise.split(':').map(Number);
                     if (nh < 24) nh += 24;
@@ -377,7 +388,7 @@ async function updatePanchang() {
             "karan_next": getNextItem(translate("karan", karanObj?.name), karanArr),
             "moon_rashi": translate("rashi", fa.request_time_panchang?.moon_sign?.name),
             "sun_rashi": translate("rashi", fa.request_time_panchang?.sun_sign?.name),
-            "guru_rashi": getSmartGuruRashi(fetchDateObj),
+            "guru_rashi": getSmartGuruRashi(dateObj),
             "lunar_month": translate("lunarMonth", fa.lunar_month?.name),
             "samvatsar": "पराभव",
             "shaka_samvat": "१९४८",
