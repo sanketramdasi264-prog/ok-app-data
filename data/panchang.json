@@ -29,7 +29,7 @@
     "moonrise": "27:52",
     "moonset": "",
     "rahukaal": "13:47 ते 15:12",
-    "din_vishesh": "रमा एकादशी, गोवत्स द्वादशी, वसुबारस",
+    "din_vishesh": "वसुबारस, रमा एकादशी",
     "location": "Mumbai",
     "is_manual_override": false
   },
@@ -63,7 +63,7 @@
     "moonrise": "28:44",
     "moonset": "",
     "rahukaal": "10:56 ते 12:21",
-    "din_vishesh": "धनत्रयोदशी / धनतेरस, प्रदोष व्रत",
+    "din_vishesh": "धनत्रयोदशी, धन्वंतरी जयंती, शुक्र प्रदोष व्रत",
     "location": "Mumbai",
     "is_manual_override": false
   },
@@ -97,7 +97,7 @@
     "moonrise": "29:37",
     "moonset": "",
     "rahukaal": "09:31 ते 10:56",
-    "din_vishesh": "कार्तिक मासिक शिवरात्री",
+    "din_vishesh": "मासिक शिवरात्री",
     "location": "Mumbai",
     "is_manual_override": false
   },
@@ -131,7 +131,7 @@
     "moonrise": "30:32",
     "moonset": "",
     "rahukaal": "16:37 ते 18:02",
-    "din_vishesh": "नरक चतुर्दशी, लक्ष्मीपूजन / दिवाळी अमावस्या",
+    "din_vishesh": "नरक चतुर्दशी, लक्ष्मीपूजन, दिवाळी अमावस्या",
     "location": "Mumbai",
     "is_manual_override": false
   }
